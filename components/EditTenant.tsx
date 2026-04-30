@@ -336,7 +336,7 @@ export default function EditTenant() {
                   { label: 'T&C Acceptance', value: form.tcAcceptanceStatus, key: 'tcAcceptanceStatus' as const },
                 ].map((row) => (
                   <div key={row.label}>
-                    <div style={{ ...customerDetailsLabelStyle, marginBottom: '4px' }}>{row.label}</div>
+                    <div style={{ ...tenantDetailsLabelStyle, marginBottom: '4px' }}>{row.label}</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                       {['Initiate', 'Pending', 'Verified'].map((status) => {
                         const selected = row.value === status;

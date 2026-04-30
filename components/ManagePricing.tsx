@@ -27,7 +27,7 @@ interface PricingState {
   basePrice: number;
   weeklyPrice: number;
   discountedPrice: number;
-  customerDiscountPrice: number;
+  tenantDiscountPrice: number;
   demandAdjustment: number;
   footTrafficAdjustment: number;
   locationAdjustment: number;
@@ -85,7 +85,7 @@ export default function ManagePricing() {
     basePrice: 1000,
     weeklyPrice: 700,
     discountedPrice: 950,
-    customerDiscountPrice: 950,
+    tenantDiscountPrice: 950,
     demandAdjustment: 1100,
     footTrafficAdjustment: 1050,
     locationAdjustment: 950,
@@ -236,8 +236,8 @@ export default function ManagePricing() {
                   <input type="number" value={pricing.discountedPrice} onChange={(event) => updateField('discountedPrice', Number(event.target.value))} style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={fieldLabelStyle}>Customer Discount Price</label>
-                  <input type="number" value={pricing.customerDiscountPrice} onChange={(event) => updateField('customerDiscountPrice', Number(event.target.value))} style={fieldStyle} />
+                  <label style={fieldLabelStyle}>Tenant Discount Price</label>
+                  <input type="number" value={pricing.tenantDiscountPrice} onChange={(event) => updateField('tenantDiscountPrice', Number(event.target.value))} style={fieldStyle} />
                 </div>
               </div>
             </div>

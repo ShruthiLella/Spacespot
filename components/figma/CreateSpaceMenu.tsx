@@ -11,7 +11,7 @@ export function CreateSpaceMenu({ onItemClick }: CreateSpaceMenuProps) {
     { label: "Space", icon: createSpaceMenuIcon, href: "/create/space", highlight: true },
     { label: "Unit", icon: createSpaceMenuIcon1, href: "/create/units" },
     { label: "Lease", icon: createSpaceMenuIcon1, href: "/create/lease" },
-    { label: "Customer", icon: createSpaceMenuIcon2, href: "/create/customer" },
+    { label: "Tenant", icon: createSpaceMenuIcon2, href: "/create/tenant" },
     { label: "Documents", icon: createSpaceMenuIcon3, href: "/create/documents" },
   ];
 

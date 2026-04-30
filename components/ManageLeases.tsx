@@ -21,8 +21,8 @@ type Lease = {
   code: string;
   title: string;
   unit: string;
-  customer: string;
-  customerId: string;
+  tenant: string;
+  tenantId: string;
   contact: string;
   period: string;
   amount: string;
@@ -34,8 +34,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-FMK-1235-56',
     title: 'Approved',
     unit: 'BEACH-L1-U2',
-    customer: 'ABC Phones',
-    customerId: 'CUST-001',
+    tenant: 'ABC Phones',
+    tenantId: 'TENANT-001',
     contact: 'John Phillip',
     period: '03/03/2024 - 03/03/2027',
     amount: '$1200 per day',
@@ -45,8 +45,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-VY-769842',
     title: 'Pending Validation',
     unit: 'BEACH-L1-U9',
-    customer: '123 Blinds',
-    customerId: 'CUST-009',
+    tenant: '123 Blinds',
+    tenantId: 'TENANT-009',
     contact: 'Sarah Mitchell',
     period: '03/03/2024 - 03/03/2026',
     amount: '$1000 per day',
@@ -56,8 +56,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-BFI-345870',
     title: 'Active',
     unit: 'CITY-L2-U5',
-    customer: 'Super Supplements',
-    customerId: 'CUST-015',
+    tenant: 'Super Supplements',
+    tenantId: 'TENANT-015',
     contact: 'Mike Cohen',
     period: '03/03/2024 - 03/03/2028',
     amount: '$950 per day',
@@ -67,8 +67,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-MT-00734',
     title: 'Pending Review',
     unit: 'BAY-L1-U3',
-    customer: '123 Real Estate',
-    customerId: 'CUST-022',
+    tenant: '123 Real Estate',
+    tenantId: 'TENANT-022',
     contact: 'Thompson',
     period: '03/03/2024 - 03/03/2025',
     amount: '$800 per day',
@@ -78,8 +78,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-RA-920184',
     title: 'Expired',
     unit: 'SUN-L3-U4',
-    customer: 'Fresh Bites',
-    customerId: 'CUST-030',
+    tenant: 'Fresh Bites',
+    tenantId: 'TENANT-030',
     contact: 'David Wilson',
     period: '03/03/2021 - 03/03/2024',
     amount: '$700 per day',
@@ -89,8 +89,8 @@ const LEASES: Lease[] = [
     code: 'LEASE-MNO-234567',
     title: 'Active',
     unit: 'CITY-L1-U7',
-    customer: 'Retail Hub',
-    customerId: 'CUST-031',
+    tenant: 'Retail Hub',
+    tenantId: 'TENANT-031',
     contact: 'Sophie',
     period: '03/03/2024 - 03/03/2029',
     amount: '$1100 per day',
@@ -126,7 +126,7 @@ export default function ManageLeases() {
   const filtered = useMemo(() => {
     return LEASES.filter((lease) => {
       const query = search.toLowerCase();
-      const matchesSearch = [lease.code, lease.customer, lease.unit].some((item) => item.toLowerCase().includes(query));
+      const matchesSearch = [lease.code, lease.tenant, lease.unit].some((item) => item.toLowerCase().includes(query));
       const matchesFilter = filter === 'All' || lease.status === filter;
       return matchesSearch && matchesFilter;
     });
@@ -198,7 +198,7 @@ export default function ManageLeases() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by Lease ID, Customer, or Unit..."
+                placeholder="Search by Lease ID, Tenant, or Unit..."
                 style={{
                   width: '100%',
                   height: '34px',
@@ -289,8 +289,8 @@ export default function ManageLeases() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', marginBottom: '10px' }}>
                     <div style={{ display: 'grid', gap: '8px' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><Building2 size={10} /> {lease.unit}</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><User size={10} /> {lease.customer}</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><FileText size={10} /> {lease.customerId}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><User size={10} /> {lease.tenant}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><FileText size={10} /> {lease.tenantId}</span>
                     </div>
                     <div style={{ display: 'grid', gap: '8px' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}><User size={10} /> {lease.contact}</span>

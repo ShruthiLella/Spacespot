@@ -4,14 +4,18 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  Image as ImageIcon,
   ImageUp,
   Info,
   MapPin,
   Sparkles,
-  Upload,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { createUnits } from '../src/api';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
+import { Badge } from './ui/Badge';
 
 type LocationState = {
   spaceId?: string;
@@ -26,33 +30,36 @@ const SPACE_LOOKUP: Record<string, { name: string; type: string; location: strin
   SP006: { name: 'Healthcare Professional Suites', type: 'Medical', location: '56 Health Avenue, Canberra ACT 2600' },
 };
 
-const sectionCard: React.CSSProperties = {
-  backgroundColor: '#ffffff',
-  border: '1.5px solid #9fe5df',
-  borderRadius: '8px',
-  padding: '10px',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '8px',
-  color: '#7f8ea1',
-  marginBottom: '4px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  letterSpacing: '0.04em',
-};
-
+// Design system style tokens
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  height: '26px',
-  border: '1px solid #9fb0c4',
-  borderRadius: '4px',
-  backgroundColor: '#ffffff',
-  fontSize: '10px',
-  color: '#203249',
-  padding: '0 8px',
+  border: '1px solid var(--spacespot-gray-300)',
+  borderRadius: '6px',
+  padding: '9px 12px',
+  fontSize: '13px',
+  color: 'var(--spacespot-navy-primary)',
+  backgroundColor: 'var(--spacespot-gray-50)',
+  outline: 'none',
   boxSizing: 'border-box',
+  transition: 'border-color 0.2s',
+};
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  appearance: 'none',
+  paddingRight: '30px',
+  cursor: 'pointer',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fafc4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 10px center',
+};
+const labelStyle: React.CSSProperties = {
+  fontSize: '12px',
+  color: 'var(--spacespot-gray-700)',
+  fontWeight: 600,
+  marginBottom: '6px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
 };
 
 export default function ManualAddUnit() {
@@ -63,45 +70,86 @@ export default function ManualAddUnit() {
   const selectedSpace = SPACE_LOOKUP[selectedId] || SPACE_LOOKUP.SP003;
 
   const [unitSummaryForm, setUnitSummaryForm] = useState({
-    unitId: '',
-    unitName: '',
-    floor: '',
-    area: '',
-    status: 'Proposed for creation',
+    unitName: 'Coffee Shop',
+    unitNumber: '101',
+    unitCategory: 'Pop up space',
+    floor: 'Level-1',
+    precinct: 'Water Front',
+    unitId: 'unit_CVQ_1_101',
+    unitDescription: 'Coffe Shop pop space between Kmart and Coles, Advertising Panel',
+    unitArea: '10',
+    unitAreaUnit: 'Sq m',
+    unitHeight: '',
+    unitWidth: '',
+    unitLength: '',
+    unitDepth: '',
+    unitFeatures: [],
+    unitStatus: 'Available',
+    unitBasePrice: '1000',
+    availableFrom: '',
+    availableTo: '',
+    specialConditions: 'No Politcal party hire, No Power facility',
+    expectedFootTraffic: '400000',
+    unitImages: [],
+    // Add area and status for compatibility with mappedUnit and UI
+    area: '10',
+    status: 'Available',
   });
 
   const completion = useMemo(() => {
     const values = [
       unitSummaryForm.unitId,
       unitSummaryForm.unitName,
+      unitSummaryForm.unitNumber,
+      unitSummaryForm.unitCategory,
       unitSummaryForm.floor,
-      unitSummaryForm.area,
-      unitSummaryForm.status,
+      unitSummaryForm.precinct,
+      unitSummaryForm.unitDescription,
+      unitSummaryForm.unitArea,
+      unitSummaryForm.unitStatus,
+      unitSummaryForm.unitBasePrice,
+      unitSummaryForm.availableFrom,
+      unitSummaryForm.availableTo,
+      unitSummaryForm.specialConditions,
+      unitSummaryForm.expectedFootTraffic,
     ];
-    const filled = values.filter((value) => value.trim().length > 0).length;
+    const filled = values.filter((value) => (value ?? '').toString().trim().length > 0).length;
     return Math.round((filled / values.length) * 100);
   }, [unitSummaryForm]);
 
-  const handleAddUnit = () => {
-    toast.success('Added Unit successfully');
-    navigate('/create/created-units', {
-      state: {
-        spaceId: selectedId,
-        spaceName: selectedSpace.name,
-        unit: {
-          id: unitSummaryForm.unitId || 'UNIT-001',
-          name: unitSummaryForm.unitName || 'Pop-up Space',
-          floor: unitSummaryForm.floor || 'Level 1',
-          area: unitSummaryForm.area || '25 Sq M',
-          status: unitSummaryForm.status || 'Proposed for creation',
+  const handleAddUnit = async () => {
+    const mappedUnit = {
+      name: unitSummaryForm.unitName || 'Pop-up Space',
+      floor: unitSummaryForm.floor || 'Level 1',
+      type: 'Office', // or add a field to the form
+      area: unitSummaryForm.unitArea || unitSummaryForm.area || '25',
+      status: unitSummaryForm.unitStatus || unitSummaryForm.status || 'Proposed for creation',
+      code: unitSummaryForm.unitId || `MANUAL-${Date.now()}`,
+      precinct: selectedSpace.name,
+      category: unitSummaryForm.unitCategory || 'Permanent',
+      frontage: '',
+      monthlyRate: unitSummaryForm.unitBasePrice || 0,
+      spaceId: selectedId,
+    };
+    try {
+      await createUnits([mappedUnit]);
+      window.dispatchEvent(new Event('unit-added'));
+      toast.success('Added Unit successfully');
+      navigate('/create/created-units', {
+        state: {
+          spaceId: selectedId,
+          spaceName: selectedSpace.name,
+          unit: mappedUnit,
         },
-      },
-    });
+      });
+    } catch (err) {
+      toast.error('Failed to add unit');
+    }
   };
 
   return (
-    <div style={{ padding: '12px 10px 20px', backgroundColor: '#eef2f6', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
+    <div style={{ padding: '24px 0 32px', backgroundColor: 'var(--spacespot-gray-100)', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '1342px', margin: '0 auto', padding: '0 24px' }}>
         <button
           type="button"
           onClick={() => navigate('/create/units/configure', { state: { spaceId: selectedId } })}
@@ -111,7 +159,7 @@ export default function ManualAddUnit() {
             gap: '6px',
             border: 'none',
             backgroundColor: 'transparent',
-            color: '#7b8da2',
+            color: 'var(--spacespot-gray-500)',
             fontSize: '11px',
             cursor: 'pointer',
             marginBottom: '6px',
@@ -137,143 +185,93 @@ export default function ManualAddUnit() {
           </div>
           <div style={{ fontSize: '22px', color: 'var(--spacespot-navy-primary)', fontWeight: 600 }}>Manually Add Units</div>
         </div>
-        <div style={{ width: '56px', height: '2px', backgroundColor: '#8adfd7', marginBottom: '12px', borderRadius: '999px' }} />
+        <div style={{ width: '56px', height: '2px', backgroundColor: 'var(--spacespot-cyan-light)', marginBottom: '20px', borderRadius: '999px' }} />
 
-        <div
-          style={{
-            ...sectionCard,
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr 1fr',
-            gap: '8px',
-            marginBottom: '10px',
-          }}
-        >
+        <Card variant="default" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '20px', padding: '24px' }}>
           <div>
-            <div style={{ fontSize: '8px', color: '#8ea0b4', marginBottom: '4px', letterSpacing: '0.04em' }}>SPACE ID</div>
+            <div style={{ fontSize: '8px', color: 'var(--spacespot-gray-400)', marginBottom: '4px', letterSpacing: '0.04em' }}>SPACE ID</div>
             <div style={{ fontSize: '22px', lineHeight: 1, color: 'var(--spacespot-navy-primary)', fontWeight: 700 }}>{selectedId}</div>
           </div>
-
           <div>
-            <div style={{ fontSize: '8px', color: '#8ea0b4', marginBottom: '4px', letterSpacing: '0.04em' }}>SPACE NAME</div>
+            <div style={{ fontSize: '8px', color: 'var(--spacespot-gray-400)', marginBottom: '4px', letterSpacing: '0.04em' }}>SPACE NAME</div>
             <div style={{ fontSize: '16px', color: 'var(--spacespot-navy-primary)', fontWeight: 600 }}>{selectedSpace.name}</div>
           </div>
-
           <div>
-            <div style={{ fontSize: '8px', color: '#8ea0b4', marginBottom: '4px', letterSpacing: '0.04em' }}>TYPE</div>
-            <span
-              style={{
-                display: 'inline-block',
-                fontSize: '10px',
-                color: '#16bfb6',
-                border: '1px solid #c9ebe7',
-                backgroundColor: '#ecfbf9',
-                borderRadius: '999px',
-                padding: '2px 8px',
-                fontWeight: 600,
-              }}
-            >
-              {selectedSpace.type}
-            </span>
+            <div style={{ fontSize: '8px', color: 'var(--spacespot-gray-400)', marginBottom: '4px', letterSpacing: '0.04em' }}>TYPE</div>
+            <Badge variant="accent" size="sm">{selectedSpace.type}</Badge>
           </div>
-
           <div>
-            <div style={{ fontSize: '8px', color: '#8ea0b4', marginBottom: '4px', letterSpacing: '0.04em' }}>LOCATION</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: '#6b7e91' }}>
-              <MapPin size={10} color="#9aacc0" />
+            <div style={{ fontSize: '8px', color: 'var(--spacespot-gray-400)', marginBottom: '4px', letterSpacing: '0.04em' }}>LOCATION</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}>
+              <MapPin size={10} color="var(--spacespot-gray-400)" />
               {selectedSpace.location}
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '10px', alignItems: 'start' }}>
-          <div style={{ display: 'grid', gap: '8px', paddingRight: '250px' }}>
-            <div style={sectionCard}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: '32px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gap: '20px' }}>
+            <Card variant="default" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
                 <Info size={12} color="var(--spacespot-cyan-primary)" />
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--spacespot-navy-primary)' }}>Basic Information</span>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}><Info size={9} color="var(--spacespot-cyan-primary)" />Unit ID</label>
-                  <input
-                    style={inputStyle}
-                    placeholder="e.g., CWC1-F1-U1"
-                    value={unitSummaryForm.unitId}
-                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, unitId: e.target.value }))}
-                  />
+                  <label style={labelStyle}>Unit Name</label>
+                  <input style={inputStyle} value={unitSummaryForm.unitName} onChange={e => setUnitSummaryForm(prev => ({ ...prev, unitName: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={labelStyle}><Building2 size={9} color="var(--spacespot-cyan-primary)" />Unit Name</label>
-                  <input
-                    style={inputStyle}
-                    placeholder="e.g., Coffee Shop"
-                    value={unitSummaryForm.unitName}
-                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, unitName: e.target.value }))}
-                  />
+                  <label style={labelStyle}>Unit Number</label>
+                  <input style={inputStyle} value={unitSummaryForm.unitNumber} onChange={e => setUnitSummaryForm(prev => ({ ...prev, unitNumber: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={labelStyle}><MapPin size={9} color="var(--spacespot-cyan-primary)" />Floor</label>
-                  <input
-                    style={inputStyle}
-                    placeholder="e.g., Level 1"
-                    value={unitSummaryForm.floor}
-                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, floor: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}><Info size={9} color="var(--spacespot-cyan-primary)" />Ownership</label>
-                  <input style={inputStyle} placeholder="e.g., Water Front" />
-                </div>
-                <div>
-                  <label style={labelStyle}><Building2 size={9} color="var(--spacespot-cyan-primary)" />Unit Category</label>
-                  <select style={inputStyle} defaultValue="Pop-up Space">
-                    <option>Pop-up Space</option>
-                    <option>Retail</option>
-                    <option>Office</option>
+                  <label style={labelStyle}>Unit Category</label>
+                  <select style={selectStyle} value={unitSummaryForm.unitCategory} onChange={e => setUnitSummaryForm(prev => ({ ...prev, unitCategory: e.target.value }))}>
+                    <option>Pop up space</option>
+                    <option>Vending machine</option>
+                    <option>Storage</option>
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}><ImageUp size={9} color="var(--spacespot-cyan-primary)" />Unit Image</label>
-                  <button
-                    type="button"
-                    style={{
-                      ...inputStyle,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: '#f8fbfd',
-                    }}
-                  >
-                    <ImageUp size={11} color="var(--spacespot-cyan-primary)" /> Upload Image
-                  </button>
+                  <label style={labelStyle}>Floor</label>
+                  <select style={selectStyle} value={unitSummaryForm.floor} onChange={e => setUnitSummaryForm(prev => ({ ...prev, floor: e.target.value }))}>
+                    <option>Level-1</option>
+                    <option>Level-2</option>
+                    <option>Level-3</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Precinct</label>
+                  <input style={inputStyle} value={unitSummaryForm.precinct} onChange={e => setUnitSummaryForm(prev => ({ ...prev, precinct: e.target.value }))} />
+                </div>
+                {/* Unit ID field removed from Basic Information section as requested */}
+                <div>
+                  <label style={labelStyle}>Unit Image</label>
+                  <Button variant="outline" size="sm" icon={<ImageUp size={14} />} style={{ width: '100%', justifyContent: 'center' }}>
+                    Upload Image
+                  </Button>
                 </div>
                 <div style={{ gridColumn: '1 / span 2' }}>
-                  <label style={labelStyle}><Info size={9} color="var(--spacespot-cyan-primary)" />Unit Description</label>
-                  <textarea
-                    rows={3}
-                    style={{ ...inputStyle, height: 'auto', padding: '7px 8px', resize: 'vertical' }}
-                    placeholder="e.g., Coffee shop pop-up space between Kmart and Coles"
-                  />
+                  <label style={labelStyle}>Unit Description</label>
+                  <textarea style={{ ...inputStyle, height: 'auto', padding: '7px 8px', resize: 'vertical' }} value={unitSummaryForm.unitDescription} onChange={e => setUnitSummaryForm(prev => ({ ...prev, unitDescription: e.target.value }))} />
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div style={sectionCard}>
+            <Card variant="default" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
                 <Sparkles size={12} color="var(--spacespot-cyan-primary)" />
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--spacespot-navy-primary)' }}>Unit Specifications</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={labelStyle}><MapPin size={9} color="var(--spacespot-cyan-primary)" />Area (Sq M)</label>
                   <input
                     style={inputStyle}
                     placeholder="e.g., 10"
-                    value={unitSummaryForm.area}
-                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, area: e.target.value }))}
+                    value={unitSummaryForm.unitArea}
+                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, unitArea: e.target.value, area: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -293,14 +291,14 @@ export default function ManualAddUnit() {
                   <input style={inputStyle} placeholder="e.g., Power, Water, Internet, Tables, Furniture" />
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div style={sectionCard}>
+            <Card variant="default" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
                 <Calendar size={12} color="var(--spacespot-cyan-primary)" />
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--spacespot-navy-primary)' }}>Pricing & Availability</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={labelStyle}><Calendar size={9} color="var(--spacespot-cyan-primary)" />Standard Unit Price (Per Day)</label>
                   <input style={inputStyle} placeholder="e.g., 100" />
@@ -309,20 +307,13 @@ export default function ManualAddUnit() {
                   <label style={labelStyle}><MapPin size={9} color="var(--spacespot-cyan-primary)" />Expected Foot Traffic</label>
                   <input style={inputStyle} placeholder="30 people per 1 hour" />
                 </div>
-                <div>
-                  <label style={labelStyle}><Sparkles size={9} color="var(--spacespot-cyan-primary)" />Unit Hotness</label>
-                  <select style={inputStyle} defaultValue="Normal">
-                    <option>Normal</option>
-                    <option>Hot</option>
-                    <option>Premium</option>
-                  </select>
-                </div>
+                {/* Unit Hotness field removed */}
                 <div>
                   <label style={labelStyle}><CheckCircle2 size={9} color="var(--spacespot-cyan-primary)" />Unit Status</label>
                   <select
-                    style={inputStyle}
-                    value={unitSummaryForm.status}
-                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, status: e.target.value }))}
+                    style={selectStyle}
+                    value={unitSummaryForm.unitStatus}
+                    onChange={(e) => setUnitSummaryForm((prev) => ({ ...prev, unitStatus: e.target.value, status: e.target.value }))}
                   >
                     <option>Proposed for creation</option>
                     <option>Available</option>
@@ -337,141 +328,98 @@ export default function ManualAddUnit() {
                   <label style={labelStyle}><Calendar size={9} color="var(--spacespot-cyan-primary)" />Available To</label>
                   <input style={inputStyle} />
                 </div>
-                <div>
-                  <label style={labelStyle}><Calendar size={9} color="var(--spacespot-cyan-primary)" />Price Plan</label>
-                  <button
-                    type="button"
-                    style={{
-                      ...inputStyle,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      backgroundColor: '#f8fbfd',
-                    }}
-                  >
-                    <Calendar size={11} color="var(--spacespot-cyan-primary)" /> Generate Pricing Plan
-                  </button>
-                </div>
-                <div>
-                  <label style={labelStyle}> </label>
-                  <button
-                    type="button"
-                    style={{
-                      ...inputStyle,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      backgroundColor: '#f8fbfd',
-                    }}
-                  >
-                    <Upload size={11} color="var(--spacespot-cyan-primary)" /> Upload Excel Document
-                  </button>
-                </div>
+                {/* Price Plan, Generate Pricing Plan, and Upload Excel Document removed as requested */}
               </div>
-            </div>
+            </Card>
 
-            <div style={{ ...sectionCard, borderColor: '#cad3de' }}>
+            <Card variant="default" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <Info size={12} color="#7f8ea1" />
+                  <Info size={12} color="var(--spacespot-gray-400)" />
                   <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--spacespot-navy-primary)' }}>Special Conditions</span>
                 </div>
-                <button
-                  type="button"
-                  style={{
-                    border: 'none',
-                    borderRadius: '4px',
-                    backgroundColor: 'var(--spacespot-navy-primary)',
-                    color: '#ffffff',
-                    fontSize: '8px',
-                    padding: '3px 7px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  AI Generate
-                </button>
               </div>
               <textarea
                 rows={3}
-                style={{ ...inputStyle, height: 'auto', padding: '7px 8px', resize: 'vertical', borderColor: '#b7c3d1' }}
+                style={{ ...inputStyle, height: 'auto', padding: '7px 8px', resize: 'vertical', borderColor: 'var(--spacespot-gray-300)' }}
                 placeholder="e.g., No Political party hire, No Power facility"
               />
-            </div>
+            </Card>
           </div>
 
           <aside
             style={{
-              ...sectionCard,
-              position: 'fixed',
-              top: '96px',
-              right: '32px',
-              width: '230px',
-              zIndex: 20,
+              backgroundColor: 'var(--spacespot-white)',
+              border: '1.5px solid var(--spacespot-cyan-300)',
+              borderRadius: '16px',
+              padding: '24px',
+              position: 'sticky',
+              top: '24px',
+              alignSelf: 'start',
+              boxShadow: 'var(--spacespot-shadow-md)',
+              minWidth: '0',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
-              <Building2 size={12} color="var(--spacespot-cyan-primary)" />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--spacespot-navy-primary)' }}>Unit Summary</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Building2 size={14} color="var(--spacespot-navy-primary)" />
+              <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--spacespot-navy-primary)' }}>Unit Summary</span>
             </div>
 
-            <div style={{ backgroundColor: '#eafaf8', borderRadius: '6px', padding: '8px', marginBottom: '8px' }}>
-              <div style={{ fontSize: '8px', color: '#8ea0b4' }}>Unit Name</div>
-              <div style={{ fontSize: '13px', color: 'var(--spacespot-navy-primary)', fontWeight: 700 }}>
-                {unitSummaryForm.unitName || 'Pop-up Space'}
+            {/* Image placeholder */}
+            <div style={{ width: '100%', aspectRatio: '16 / 10', backgroundColor: '#17283e', borderRadius: '8px', display: 'grid', placeItems: 'center', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <ImageIcon size={22} color="#4a6a85" />
+                <span style={{ fontSize: '10px', color: '#4a6a85', fontWeight: 500 }}>Unit Main Image</span>
+              </div>
+            </div>
+
+            {/* Unit name chip */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'var(--spacespot-cyan-pale)', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'var(--spacespot-cyan-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700, fontSize: '14px', color: '#fff' }}>
+                {unitSummaryForm.unitName ? unitSummaryForm.unitName.charAt(0).toUpperCase() : '?'}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--spacespot-navy-primary)' }}>{unitSummaryForm.unitName || 'Unit Name'}</div>
+                <div style={{ fontSize: '10px', color: 'var(--spacespot-gray-500)', marginTop: '2px' }}>{unitSummaryForm.unitCategory || 'Category'}</div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gap: '7px', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7e91' }}>
-                <span>ID</span>
-                <strong style={{ color: '#2a3b52' }}>{unitSummaryForm.unitId || '-'}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7e91' }}>
-                <span>Floor</span>
-                <strong style={{ color: '#2a3b52' }}>{unitSummaryForm.floor || '-'}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7e91' }}>
-                <span>Area</span>
-                <strong style={{ color: '#2a3b52' }}>{unitSummaryForm.area || '-'}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7e91' }}>
+              {[
+                { label: 'ID', value: unitSummaryForm.unitId },
+                { label: 'Unit Number', value: unitSummaryForm.unitNumber },
+                { label: 'Category', value: unitSummaryForm.unitCategory },
+                { label: 'Floor', value: unitSummaryForm.floor },
+                { label: 'Precinct', value: unitSummaryForm.precinct },
+                { label: 'Area', value: unitSummaryForm.unitArea },
+                { label: 'Base Price (per day)', value: unitSummaryForm.unitBasePrice },
+                { label: 'Available From', value: unitSummaryForm.availableFrom },
+                { label: 'Available To', value: unitSummaryForm.availableTo },
+                { label: 'Foot Traffic', value: unitSummaryForm.expectedFootTraffic },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--spacespot-gray-500)' }}>
+                  <span>{label}</span>
+                  <strong style={{ color: 'var(--spacespot-navy-light)' }}>{value || '-'}</strong>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--spacespot-gray-500)', alignItems: 'center' }}>
                 <span>Status</span>
-                <span style={{ fontSize: '9px', color: 'var(--spacespot-warning)', backgroundColor: '#fff4e5', border: '1px solid #f5d39c', borderRadius: '999px', padding: '1px 7px' }}>
-                  {unitSummaryForm.status}
-                </span>
+                <Badge variant="warning" size="sm">{unitSummaryForm.unitStatus || '-'}</Badge>
               </div>
             </div>
 
-            <div style={{ height: '1px', backgroundColor: '#e4edf5', margin: '8px 0' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#7f8ea1', marginBottom: '6px' }}>
+            <div style={{ height: '1px', backgroundColor: 'var(--spacespot-gray-200)', margin: '8px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--spacespot-gray-500)', marginBottom: '6px' }}>
               <span>Form Completion</span>
               <span style={{ color: 'var(--spacespot-cyan-primary)', fontWeight: 700 }}>{completion}%</span>
             </div>
-            <div style={{ height: '6px', backgroundColor: '#edf2f7', borderRadius: '999px', overflow: 'hidden', marginBottom: '10px' }}>
-              <div style={{ width: `${completion}%`, height: '100%', backgroundColor: 'var(--spacespot-cyan-primary)' }} />
+            <div style={{ height: '6px', backgroundColor: 'var(--spacespot-gray-100)', borderRadius: '999px', overflow: 'hidden', marginBottom: '10px' }}>
+              <div style={{ width: `${completion}%`, height: '100%', backgroundColor: 'var(--spacespot-cyan-primary)', transition: 'width 0.3s ease' }} />
             </div>
 
-            <button
-              type="button"
-              onClick={handleAddUnit}
-              style={{
-                width: '100%',
-                border: 'none',
-                borderRadius: '6px',
-                backgroundColor: 'var(--spacespot-navy-primary)',
-                color: '#ffffff',
-                fontSize: '11px',
-                height: '30px',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Add Unit
-            </button>
+            <Button variant="primary" size="sm" onClick={handleAddUnit} style={{ width: '100%', justifyContent: 'center' }}>
+              Submit Unit for Approval
+            </Button>
 
             <div style={{ marginTop: '9px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--spacespot-gray-500)', fontSize: '9px' }}>
               <CheckCircle2 size={11} color="var(--spacespot-cyan-primary)" />

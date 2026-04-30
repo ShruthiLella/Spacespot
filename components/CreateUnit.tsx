@@ -95,48 +95,50 @@ export default function CreateUnit() {
   };
 
   return (
-    <div style={{ padding: '12px 10px 20px', backgroundColor: '#eef2f6', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+    <div style={{ backgroundColor: '#eef2f6', minHeight: '100vh', padding: '24px 0 32px' }}>
+      <div style={{ maxWidth: '1342px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
           <button
             type="button"
             style={{
-              border: '1px solid #d0dae5',
+              border: '1.5px solid #9fe5df',
               backgroundColor: '#1e2f46',
-              borderRadius: '8px',
+              borderRadius: '10px',
               color: '#ffffff',
-              fontSize: '11px',
-              height: '28px',
-              padding: '0 10px',
+              fontSize: '13px',
+              height: '36px',
+              padding: '0 18px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
               cursor: 'pointer',
+              fontWeight: 600,
             }}
           >
-            All Spaces <ChevronDown size={13} />
+            All Spaces <ChevronDown size={15} />
           </button>
         </div>
 
         <div
           style={{
-            backgroundColor: '#f0f2f5',
-            border: '1px solid #d6dde6',
-            borderRadius: '2px',
-            padding: '16px',
+            backgroundColor: '#fff',
+            border: '1px solid #dbe5ee',
+            borderRadius: '10px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(20, 216, 204, 0.06)',
           }}
         >
-          <div style={{ marginBottom: '12px' }}>
-            <h1 style={{ fontSize: '11px', fontWeight: 600, color: '#223247', margin: 0 }}>
+          <div style={{ marginBottom: '18px' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#1a2b3c', margin: 0 }}>
               Create Unit - Select a Space
             </h1>
-            <p style={{ fontSize: '10px', color: '#7f8ea1', margin: '3px 0 0' }}>
+            <p style={{ fontSize: '13px', color: '#6b7e91', margin: '6px 0 0' }}>
               Choose a space from the list below to add new units
             </p>
           </div>
 
-          <div style={{ position: 'relative', marginBottom: '14px', maxWidth: '340px' }}>
-            <Search size={11} color="#9aa7b7" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <div style={{ position: 'relative', marginBottom: '20px', maxWidth: '340px' }}>
+            <Search size={13} color="#9aa7b7" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Search by space name, location, type, or ID..."
@@ -144,19 +146,20 @@ export default function CreateUnit() {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: '100%',
-                height: '28px',
-                border: '1px solid #9fb0c4',
+                height: '36px',
+                border: '1px solid #cfd7e2',
                 borderRadius: '6px',
-                fontSize: '10px',
-                color: '#203249',
-                padding: '0 10px 0 28px',
-                backgroundColor: '#ffffff',
+                fontSize: '13px',
+                color: '#1f2937',
+                padding: '0 12px 0 36px',
+                backgroundColor: '#f9fbfc',
                 boxSizing: 'border-box',
+                outline: 'none',
               }}
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
             {filteredSpaces.map((space) => (
               <button
                 key={space.id}
@@ -164,79 +167,83 @@ export default function CreateUnit() {
                 onClick={() => handleSelectSpace(space.id)}
                 style={{
                   textAlign: 'left',
-                  borderRadius: '6px',
-                  border: selectedSpace === space.id ? '1px solid #16bfb6' : '1px solid #aebccc',
-                  backgroundColor: '#ffffff',
-                  padding: '9px',
+                  borderRadius: '10px',
+                  border: selectedSpace === space.id ? '1.5px solid #16bfb6' : '1px solid #dbe5ee',
+                  backgroundColor: '#f9fbfc',
+                  padding: '20px',
                   cursor: 'pointer',
-                  minHeight: '135px',
+                  minHeight: '150px',
+                  boxShadow: selectedSpace === space.id ? '0 2px 8px rgba(20, 216, 204, 0.10)' : 'none',
+                  transition: 'box-shadow 0.2s',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                   <div
                     style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '5px',
-                      backgroundColor: '#dff9f7',
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '6px',
+                      backgroundColor: '#eafaf8',
                       display: 'grid',
                       placeItems: 'center',
                     }}
                   >
-                    <Building2 size={10} color="var(--spacespot-cyan-primary)" />
+                    <Building2 size={13} color="var(--spacespot-cyan-primary)" />
                   </div>
                   <span
                     style={{
-                      fontSize: '7px',
+                      fontSize: '11px',
                       color: '#8b99ab',
                       backgroundColor: '#f4f6f9',
                       border: '1px solid #e0e7ef',
                       borderRadius: '999px',
-                      padding: '1px 5px',
+                      padding: '2px 8px',
+                      fontWeight: 600,
                     }}
                   >
                     {space.id}
                   </span>
                 </div>
 
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#21334a', marginBottom: '4px' }}>{space.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#7f8ea1', fontSize: '8px', marginBottom: '5px' }}>
-                  <MapPin size={9} color="#9aa7b7" />
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#21334a', marginBottom: '6px' }}>{space.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7f8ea1', fontSize: '12px', marginBottom: '8px' }}>
+                  <MapPin size={11} color="#9aa7b7" />
                   {space.address}
                 </div>
 
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: '7px',
+                    fontSize: '11px',
                     color: '#16bfb6',
                     border: '1px solid #bfece8',
                     backgroundColor: '#ecfbf9',
                     borderRadius: '999px',
-                    padding: '1px 6px',
-                    marginBottom: '6px',
+                    padding: '2px 10px',
+                    marginBottom: '10px',
+                    fontWeight: 600,
                   }}
                 >
                   {space.type}
                 </span>
 
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '5px' }}>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
                   <div>
-                    <div style={{ fontSize: '6px', color: '#9aa7b7', letterSpacing: '0.05em' }}>FLOORS</div>
-                    <div style={{ fontSize: '8px', color: '#223247' }}>{space.floors}</div>
+                    <div style={{ fontSize: '10px', color: '#9aa7b7', letterSpacing: '0.05em', fontWeight: 600 }}>FLOORS</div>
+                    <div style={{ fontSize: '12px', color: '#223247', fontWeight: 700 }}>{space.floors}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '6px', color: '#9aa7b7', letterSpacing: '0.05em' }}>UNITS</div>
-                    <div style={{ fontSize: '8px', color: '#223247' }}>{space.units}</div>
+                    <div style={{ fontSize: '10px', color: '#9aa7b7', letterSpacing: '0.05em', fontWeight: 600 }}>UNITS</div>
+                    <div style={{ fontSize: '12px', color: '#223247', fontWeight: 700 }}>{space.units}</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '6px', color: '#9aa7b7' }}>Existing Units</div>
+                  <div style={{ fontSize: '10px', color: '#9aa7b7', fontWeight: 600 }}>Existing Units</div>
                   <div
                     style={{
-                      width: '14px',
-                      height: '14px',
+                      width: '18px',
+                      height: '18px',
                       borderRadius: '999px',
                       border: '1px solid #dbe3ec',
                       backgroundColor: '#f4f7fa',
@@ -244,7 +251,7 @@ export default function CreateUnit() {
                       placeItems: 'center',
                     }}
                   >
-                    <ChevronRight size={9} color="#99a7b7" />
+                    <ChevronRight size={12} color="#99a7b7" />
                   </div>
                 </div>
               </button>

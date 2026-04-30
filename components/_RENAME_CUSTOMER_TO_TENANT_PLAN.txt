@@ -1,0 +1,24 @@
+RENAME PLAN: Customer → Tenant
+
+1. Rename files:
+- CreateCustomer.tsx → CreateTenant.tsx
+- EditCustomer.tsx → EditTenant.tsx
+- ManageCustomers.tsx → ManageTenants.tsx
+
+2. Update all code, types, variables, and UI text:
+- Customer → Tenant
+- customer → tenant
+- CUSTOMERS → TENANTS
+- customerBrandName → tenantBrandName
+- customerLevel → tenantLevel
+- etc.
+
+3. Update all import/export statements and routes.
+
+4. Update any references in other files (e.g., navigation, links, API calls).
+
+5. Test thoroughly after refactor.
+
+---
+
+This file is for tracking the large refactor. All changes will be applied in sequence.

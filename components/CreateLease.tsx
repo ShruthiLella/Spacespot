@@ -14,7 +14,7 @@ import {
   Search,
 } from 'lucide-react';
 
-type LeaseFormData = {
+interface LeaseFormData {
   leaseId: string;
   leaseForUnitId: string;
   leasedTo: string;
@@ -32,7 +32,7 @@ type LeaseFormData = {
   invoiceStatus: 'Generate Invoice' | 'Invoice generated' | 'Preview Invoice';
   advancePaymentReceived: 'Yes' | 'No';
   paymentStatus: 'Received' | 'Pending';
-};
+}
 
 const sectionCard: React.CSSProperties = {
   backgroundColor: '#ffffff',
@@ -179,9 +179,9 @@ export default function CreateLease() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Leased To (Customer) *</label>
+                  <label style={labelStyle}>Leased To (Tenant) *</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px' }}>
-                    <input style={inputStyle} value={form.leasedTo} onChange={(e) => updateField('leasedTo', e.target.value)} placeholder="Select customer" />
+                    <input style={inputStyle} value={form.leasedTo} onChange={(e) => updateField('leasedTo', e.target.value)} placeholder="Select tenant" />
                     <button type="button" style={{ height: '30px', border: 'none', borderRadius: '4px', backgroundColor: '#6b7788', color: '#ffffff', fontSize: '10px', padding: '0 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                       <Search size={11} /> Lookup
                     </button>
@@ -458,7 +458,7 @@ export default function CreateLease() {
 
                 <div style={{ backgroundColor: '#f3f5f8', borderRadius: '6px', padding: '8px' }}>
                   <div style={{ fontSize: '8px', color: 'var(--spacespot-navy-primary)', marginBottom: '5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <Bell size={8} color="var(--spacespot-cyan-primary)" /> Setup Email Reminder to Customer
+                    <Bell size={8} color="var(--spacespot-cyan-primary)" /> Setup Email Reminder to Tenant
                   </div>
                   <div style={{ display: 'grid', gap: '2px', fontSize: '7px', color: 'var(--spacespot-gray-500)' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '7px', height: '7px', backgroundColor: '#3f3f46', display: 'inline-block' }} /> A week before the payment date</span>
@@ -554,7 +554,7 @@ export default function CreateLease() {
                   marginBottom: '8px',
                 }}
               >
-                Send T&C's to Customer
+                Send T&C's to Tenant
               </button>
 
               <div style={{ fontSize: '8px', color: '#8a99aa', lineHeight: 1.4, backgroundColor: 'var(--spacespot-gray-50)', borderRadius: '6px', padding: '8px' }}>
@@ -653,7 +653,7 @@ export default function CreateLease() {
                 <span style={{ fontSize: '8px', fontWeight: 600, color: 'var(--spacespot-navy-primary)' }}>Required Fields</span>
               </div>
               <div style={{ fontSize: '7px', color: '#8a99aa', lineHeight: 1.4 }}>
-                Lease ID, Unit ID, and Customer are required to create a lease.
+                Lease ID, Unit ID, and Tenant are required to create a lease.
               </div>
             </div>
           </aside>

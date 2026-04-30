@@ -11,7 +11,7 @@ export function ManageMenu({ onItemClick }: ManageMenuProps) {
     { label: "Space", icon: manageMenuSubIcon, href: "/manage/spaces" },
     { label: "Unit", icon: manageMenuSubIcon1, href: "/manage/units" },
     { label: "Lease", icon: manageMenuSubIcon1, href: "/manage/leases" },
-    { label: "Customer", icon: manageMenuSubIcon2, href: "/manage/customers" },
+    { label: "Tenant", icon: manageMenuSubIcon2, href: "/manage/tenants" },
     { label: "Pricing", icon: manageMenuSubIcon3, href: "/manage/pricing" },
     { label: "Documents", icon: manageMenuSubIcon4, href: "/manage/documents" },
   ];

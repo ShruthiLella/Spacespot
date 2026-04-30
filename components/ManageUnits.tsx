@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -11,6 +11,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { getAllUnits } from '../src/api';
 
 type UnitStatus = 'Leased' | 'Available Soon' | 'Proposed';
 type UnitCategory = 'Permanent' | 'Proposed' | 'Temporary' | 'Kiosk';
@@ -28,22 +29,8 @@ interface Unit {
   status: UnitStatus;
 }
 
-const UNITS: Unit[] = [
-  { id: 'UNIT-01', code: 'U01', name: 'Office Suite A1', location: 'Level-1', precinct: 'North Wing', category: 'Permanent', area: 120, frontage: '12m', monthlyRate: 2500, status: 'Leased' },
-  { id: 'UNIT-02', code: 'U02', name: 'Office Suite A2', location: 'Level-1', precinct: 'North Wing', category: 'Permanent', area: 150, frontage: '15m', monthlyRate: 3000, status: 'Proposed' },
-  { id: 'UNIT-03', code: 'U03', name: 'Executive Office B1', location: 'Level-3', precinct: 'South Wing', category: 'Permanent', area: 200, frontage: '20m', monthlyRate: 4500, status: 'Leased' },
-  { id: 'UNIT-04', code: 'U04', name: 'Conference Room C1', location: 'Level-2', precinct: 'Central', category: 'Temporary', area: 80, frontage: '8m', monthlyRate: 1800, status: 'Available Soon' },
-  { id: 'UNIT-05', code: 'U05', name: 'Co-working Space A', location: 'Level-1', precinct: 'Innovation Zone', category: 'Proposed', area: 60, frontage: '6m', monthlyRate: 900, status: 'Proposed' },
-  { id: 'UNIT-06', code: 'U06', name: 'Private Office 2D', location: 'Level-2', precinct: 'East Side', category: 'Permanent', area: 45, frontage: '4m', monthlyRate: 850, status: 'Leased' },
-  { id: 'UNIT-07', code: 'U07', name: 'Meeting Pod 3C', location: 'Level-3', precinct: 'Collaboration Hub', category: 'Temporary', area: 25, frontage: '2.5m', monthlyRate: 650, status: 'Available Soon' },
-  { id: 'UNIT-08', code: 'U08', name: 'Retail Space R1', location: 'Ground', precinct: 'Riverside Promenade', category: 'Permanent', area: 180, frontage: '18m', monthlyRate: 3800, status: 'Leased' },
-  { id: 'UNIT-09', code: 'U09', name: 'Food Court Stall F1', location: 'Level-1', precinct: 'Dining Quarter', category: 'Kiosk', area: 30, frontage: '3m', monthlyRate: 1100, status: 'Leased' },
-  { id: 'UNIT-10', code: 'U10', name: 'Lab Space L1', location: 'Level-1', precinct: 'Research Wing', category: 'Permanent', area: 210, frontage: '21m', monthlyRate: 5200, status: 'Proposed' },
-  { id: 'UNIT-11', code: 'U11', name: 'Boutique Store B1', location: 'Ground', precinct: 'Fashion District', category: 'Permanent', area: 90, frontage: '9m', monthlyRate: 3300, status: 'Leased' },
-  { id: 'UNIT-12', code: 'U12', name: 'Pop-up Booth P1', location: 'Ground', precinct: 'Central Atrium', category: 'Proposed', area: 20, frontage: '2m', monthlyRate: 800, status: 'Available Soon' },
-];
-
-const getStatusTheme = (status: UnitStatus) => {
+// Status and category theme helpers
+function getStatusTheme(status: UnitStatus) {
   if (status === 'Leased') {
     return {
       color: 'var(--spacespot-success)',
@@ -51,7 +38,6 @@ const getStatusTheme = (status: UnitStatus) => {
       border: 'rgba(16, 185, 129, 0.28)',
     };
   }
-
   if (status === 'Proposed') {
     return {
       color: 'var(--spacespot-info)',
@@ -59,15 +45,14 @@ const getStatusTheme = (status: UnitStatus) => {
       border: 'rgba(59, 130, 246, 0.26)',
     };
   }
-
   return {
     color: 'var(--spacespot-warning)',
     background: 'var(--spacespot-warning-light)',
     border: 'rgba(245, 158, 11, 0.26)',
   };
-};
+}
 
-const getCategoryTheme = (category: UnitCategory) => {
+function getCategoryTheme(category: UnitCategory) {
   if (category === 'Permanent') {
     return {
       color: 'var(--spacespot-cyan-dark)',
@@ -75,7 +60,6 @@ const getCategoryTheme = (category: UnitCategory) => {
       border: 'var(--spacespot-cyan-300)',
     };
   }
-
   if (category === 'Temporary') {
     return {
       color: 'var(--spacespot-warning)',
@@ -83,7 +67,6 @@ const getCategoryTheme = (category: UnitCategory) => {
       border: 'rgba(245, 158, 11, 0.32)',
     };
   }
-
   if (category === 'Kiosk') {
     return {
       color: 'var(--spacespot-success)',
@@ -91,43 +74,84 @@ const getCategoryTheme = (category: UnitCategory) => {
       border: 'rgba(16, 185, 129, 0.28)',
     };
   }
-
   return {
     color: 'var(--spacespot-info)',
     background: 'var(--spacespot-info-light)',
     border: 'rgba(59, 130, 246, 0.26)',
   };
-};
+}
 
 export default function ManageUnits() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | UnitStatus>('All');
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchUnits() {
+      setLoading(true);
+      setError('');
+      try {
+        const token = localStorage.getItem('token') || undefined;
+        const data = await getAllUnits(token);
+        setUnits(data);
+      } catch (err: any) {
+        setError('Failed to fetch units');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUnits();
+  }, []);
+
+  // Refetch units when the window regains focus (user returns to tab)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchUnits();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Refetch units after adding a new unit (listen for a custom event)
+  useEffect(() => {
+    const handleUnitAdded = () => {
+      fetchUnits();
+    };
+    window.addEventListener('unit-added', handleUnitAdded);
+    return () => {
+      window.removeEventListener('unit-added', handleUnitAdded);
+    };
+  }, []);
 
   const filteredUnits = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
-    return UNITS.filter((unit) => {
+    return units.filter((unit) => {
       const matchesSearch =
         query.length === 0 ||
         unit.name.toLowerCase().includes(query) ||
-        unit.code.toLowerCase().includes(query) ||
-        unit.location.toLowerCase().includes(query) ||
-        unit.precinct.toLowerCase().includes(query);
+        (unit.code && unit.code.toLowerCase().includes(query)) ||
+        (unit.location && unit.location.toLowerCase().includes(query)) ||
+        (unit.precinct && unit.precinct.toLowerCase().includes(query));
 
       const matchesStatus = statusFilter === 'All' || unit.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, units]);
 
   const stats = useMemo(
     () => ({
-      total: UNITS.length,
-      leased: UNITS.filter((unit) => unit.status === 'Leased').length,
-      availableSoon: UNITS.filter((unit) => unit.status === 'Available Soon').length,
-      proposed: UNITS.filter((unit) => unit.status === 'Proposed').length,
+      total: units.length,
+      leased: units.filter((unit) => unit.status === 'Leased').length,
+      availableSoon: units.filter((unit) => unit.status === 'Available Soon').length,
+      proposed: units.filter((unit) => unit.status === 'Proposed').length,
     }),
-    [],
+    [units],
   );
 
   return (
@@ -457,6 +481,9 @@ export default function ManageUnits() {
             </table>
           </div>
         </div>
+
+        {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+        {loading && <div style={{ color: 'gray', marginBottom: 8 }}>Loading units...</div>}
       </div>
     </div>
   );

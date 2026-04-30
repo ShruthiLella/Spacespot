@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Building2, Edit3, MapPin, Sparkles, Wand2 } from 'lucide-react';
+import { Building2, Edit3, Layers, MapPin, Wand2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 type LocationState = {
@@ -23,9 +23,9 @@ export default function AddUnits() {
   const selectedSpace = SPACE_LOOKUP[selectedId] || SPACE_LOOKUP.SP003;
 
   return (
-    <div style={{ padding: '12px 10px 20px', backgroundColor: '#eef2f6', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+    <div style={{ backgroundColor: '#eef2f6', minHeight: '100vh', padding: '24px 0 32px' }}>
+      <div style={{ maxWidth: '1342px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
           <div
             style={{
               width: '34px',
@@ -41,18 +41,18 @@ export default function AddUnits() {
           </div>
           <div style={{ fontSize: '22px', color: 'var(--spacespot-navy-primary)', fontWeight: 600 }}>Add Units to Space</div>
         </div>
-        <div style={{ width: '56px', height: '2px', backgroundColor: '#8adfd7', marginBottom: '12px', borderRadius: '999px' }} />
+        <div style={{ width: '56px', height: '2px', backgroundColor: '#8adfd7', marginBottom: '18px', borderRadius: '999px' }} />
 
         <div
           style={{
             backgroundColor: '#ffffff',
             border: '1.5px solid #9fe5df',
-            borderRadius: '8px',
-            padding: '10px 12px',
+            borderRadius: '10px',
+            padding: '20px',
             display: 'grid',
             gridTemplateColumns: '1fr 1fr 1fr 1fr',
-            gap: '8px',
-            marginBottom: '20px',
+            gap: '12px',
+            marginBottom: '24px',
           }}
         >
           <div>
@@ -92,24 +92,26 @@ export default function AddUnits() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '30px', color: 'var(--spacespot-navy-primary)', fontWeight: 500 }}>Choose Your Approach</div>
           <div style={{ fontSize: '11px', color: '#8ea0b4', marginTop: '6px' }}>
             Select how you'd like to add units to this space
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', maxWidth: '980px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', maxWidth: '980px', margin: '0 auto' }}>
           <button
             type="button"
-            onClick={() => navigate('/create/units/auto-generated', { state: { spaceId: selectedId } })}
+            onClick={() => navigate('/create/units/bulk', { state: { spaceId: selectedId } })}
             style={{
               textAlign: 'left',
               backgroundColor: '#ffffff',
-              border: '1px solid #d2dde8',
-              borderRadius: '8px',
-              padding: '16px',
+              border: '1.5px solid #9fe5df',
+              borderRadius: '10px',
+              padding: '24px',
               cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(20, 216, 204, 0.06)',
+              transition: 'box-shadow 0.2s',
             }}
           >
             <div
@@ -124,25 +126,25 @@ export default function AddUnits() {
                 boxShadow: '0 8px 12px rgba(20, 216, 204, 0.2)',
               }}
             >
-              <Sparkles size={19} color="#ffffff" />
+              <Layers size={19} color="#ffffff" />
             </div>
-            <div style={{ fontSize: '24px', color: 'var(--spacespot-navy-primary)', fontWeight: 600, marginBottom: '6px' }}>Auto-Generate Units</div>
-            <div style={{ fontSize: '11px', color: '#90a0b2', lineHeight: 1.5, marginBottom: '10px' }}>
-              Let AI create units automatically using descriptions, inputs, or data analysis. Fast and intelligent.
+            <div style={{ fontSize: '22px', color: 'var(--spacespot-navy-primary)', fontWeight: 700, marginBottom: '8px' }}>Bulk Units</div>
+            <div style={{ fontSize: '12px', color: '#90a0b2', lineHeight: 1.5, marginBottom: '12px' }}>
+              Add multiple units at once by specifying count, naming patterns, and shared attributes.
             </div>
-            <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
+            <div style={{ display: 'grid', gap: '6px', marginBottom: '12px' }}>
               {[
-                'AI-powered unit generation',
-                'Multiple generation methods',
-                'Save time with bulk creation',
+                'Create many units at once',
+                'Configurable naming patterns',
+                'Shared attributes across units',
               ].map((item) => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--spacespot-gray-500)', fontSize: '10px' }}>
-                  <Bot size={11} color="var(--spacespot-cyan-primary)" />
+                  <Layers size={11} color="var(--spacespot-cyan-primary)" />
                   {item}
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '12px', color: '#16bfb6', fontWeight: 600 }}>Get Started →</div>
+            <div style={{ fontSize: '13px', color: '#16bfb6', fontWeight: 700 }}>Get Started →</div>
           </button>
 
           <button
@@ -151,10 +153,12 @@ export default function AddUnits() {
             style={{
               textAlign: 'left',
               backgroundColor: '#ffffff',
-              border: '1px solid #d2dde8',
-              borderRadius: '8px',
-              padding: '16px',
+              border: '1.5px solid #9fe5df',
+              borderRadius: '10px',
+              padding: '24px',
               cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(20, 216, 204, 0.06)',
+              transition: 'box-shadow 0.2s',
             }}
           >
             <div
@@ -171,11 +175,11 @@ export default function AddUnits() {
             >
               <Edit3 size={19} color="#ffffff" />
             </div>
-            <div style={{ fontSize: '24px', color: 'var(--spacespot-navy-primary)', fontWeight: 600, marginBottom: '6px' }}>Manually Add Units</div>
-            <div style={{ fontSize: '11px', color: '#90a0b2', lineHeight: 1.5, marginBottom: '10px' }}>
+            <div style={{ fontSize: '22px', color: 'var(--spacespot-navy-primary)', fontWeight: 700, marginBottom: '8px' }}>Manually Add Units</div>
+            <div style={{ fontSize: '12px', color: '#90a0b2', lineHeight: 1.5, marginBottom: '12px' }}>
               Create units individually with complete control over every detail and specification.
             </div>
-            <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
+            <div style={{ display: 'grid', gap: '6px', marginBottom: '12px' }}>
               {[
                 'Full control over details',
                 'Customizable specifications',
@@ -187,7 +191,7 @@ export default function AddUnits() {
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '12px', color: '#16bfb6', fontWeight: 600 }}>Get Started →</div>
+            <div style={{ fontSize: '13px', color: '#16bfb6', fontWeight: 700 }}>Get Started →</div>
           </button>
         </div>
       </div>

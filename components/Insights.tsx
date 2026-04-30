@@ -361,7 +361,7 @@ export default function Insights() {
               Action Items
             </div>
             {[
-              { title: '4 Leases Expiring This Month', sub: 'Contact customers for renewal', color: 'var(--spacespot-error)' },
+              { title: '4 Leases Expiring This Month', sub: 'Contact tenants for renewal', color: 'var(--spacespot-error)' },
               { title: 'Floor 5 Underperforming', sub: '8 vacant units - review pricing', color: 'var(--spacespot-warning)' },
               { title: 'Revenue Target on Track', sub: '85% of Q2 target achieved', color: 'var(--spacespot-success)' },
             ].map((item) => (

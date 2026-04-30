@@ -1,0 +1,86 @@
+/* Single, correct dropdown style for seamless look */
+.spacespot-timepicker-dropdown {
+  border-radius: 10px;
+  border: 1px solid #e0f9f7;
+  border-top: none !important;
+  margin-top: -4px !important;
+  box-shadow: 0 6px 24px rgba(20, 216, 204, 0.13);
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  min-width: 140px;
+  z-index: 9999;
+}
+/* Restore and restyle the time picker dropdown header as a subtle label */
+.spacespot-timepicker-dropdown .react-datepicker-time__header {
+  display: block !important;
+  background: none !important;
+  color: #374151 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  padding: 8px 10px 2px 10px !important;
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+  box-shadow: none !important;
+}
+/* Time list items match datepicker day style */
+.spacespot-timepicker-dropdown .react-datepicker__time-list-item {
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #1f2937;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+  font-family: inherit;
+}
+.spacespot-timepicker-dropdown .react-datepicker__time-box {
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+}
+.spacespot-timepicker-dropdown .react-datepicker__time-list {
+  border-radius: 0 0 10px 10px;
+}
+/* Selected/keyboard-selected matches datepicker selected day */
+.spacespot-timepicker-dropdown .react-datepicker__time-list-item--selected,
+.spacespot-timepicker-dropdown .react-datepicker__time-list-item--keyboard-selected {
+  background-color: var(--spacespot-cyan-primary, #14D8CC) !important;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 6px !important;
+  letter-spacing: 0.01em;
+}
+/* Hover matches datepicker day hover */
+.spacespot-timepicker-dropdown .react-datepicker__time-list-item:hover {
+  background-color: var(--spacespot-cyan-light, #7EDDD3);
+  color: #1a2b3c;
+  border-radius: 6px;
+}
+/* Input field matches datepicker input */
+.spacespot-timepicker-input {
+  width: 100%;
+  font-size: 13px;
+  color: #1f2937;
+  background-color: #f9fbfc;
+  border: 1px solid #cfd7e2;
+  border-radius: 6px;
+  padding: 7px 10px;
+  box-sizing: border-box;
+  outline: none;
+}
+.spacespot-timepicker-input:focus {
+  border-color: var(--spacespot-cyan-primary, #14D8CC);
+  box-shadow: 0 0 0 2px rgba(20, 216, 204, 0.15);
+}
+/* Dropdown header (timeCaption) matches datepicker header */
+.spacespot-timepicker-dropdown .react-datepicker__header {
+  background-color: var(--spacespot-cyan-pale, #E0F9F7);
+  border-bottom: 1px solid #b2e0dc;
+  border-radius: 10px 10px 0 0;
+  padding-top: 12px;
+  padding-bottom: 8px;
+}

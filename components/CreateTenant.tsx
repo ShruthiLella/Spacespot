@@ -259,13 +259,13 @@ export default function CreateTenant() {
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.ownerName} onChange={(e) => updateField('ownerName', e.target.value)} placeholder="e.g., John Phillip" />
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Reference/Responsible Name</label>
+                  <label style={tenantDetailsLabelStyle}>Reference/Responsible Name</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.referenceName} onChange={(e) => updateField('referenceName', e.target.value)} placeholder="Enter reference name" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Customer Level</label>
-                  <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.customerLevel} onChange={(e) => updateField('customerLevel', e.target.value)}>
+                  <label style={tenantDetailsLabelStyle}>Tenant Level</label>
+                  <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.tenantLevel} onChange={(e) => updateField('tenantLevel', e.target.value)}>
                     <option>Select an option</option>
                     <option>Level 1</option>
                     <option>Level 2</option>
@@ -273,41 +273,41 @@ export default function CreateTenant() {
                   </select>
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Email *</label>
+                  <label style={tenantDetailsLabelStyle}>Email *</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder="Admin@abcphones.com" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Phone Number (Primary)</label>
+                  <label style={tenantDetailsLabelStyle}>Phone Number (Primary)</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.primaryPhone} onChange={(e) => updateField('primaryPhone', e.target.value)} placeholder="412356789" />
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Phone Number (Secondary)</label>
+                  <label style={tenantDetailsLabelStyle}>Phone Number (Secondary)</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.secondaryPhone} onChange={(e) => updateField('secondaryPhone', e.target.value)} placeholder="412356789" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Business Website</label>
+                  <label style={tenantDetailsLabelStyle}>Business Website</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.businessWebsite} onChange={(e) => updateField('businessWebsite', e.target.value)} placeholder="www.pinkdiamonds.com" />
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Preferred Space-Unit</label>
+                  <label style={tenantDetailsLabelStyle}>Preferred Space-Unit</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.preferredSpaceUnit} onChange={(e) => updateField('preferredSpaceUnit', e.target.value)} placeholder="BEACH-L1-U1 (Space-Level-Unit)" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Proposed Usage of the Unit</label>
+                  <label style={tenantDetailsLabelStyle}>Proposed Usage of the Unit</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.proposedUsage} onChange={(e) => updateField('proposedUsage', e.target.value)} placeholder="e.g., Coffee Shop, Retail Store" />
                 </div>
                 <div />
 
                 <div style={{ gridColumn: '1 / span 2' }}>
-                  <label style={customerDetailsLabelStyle}>Address</label>
+                  <label style={tenantDetailsLabelStyle}>Address</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.address1} onChange={(e) => updateField('address1', e.target.value)} placeholder="20 Bond Street Canberra ACT-1000" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Brand Logo</label>
+                  <label style={tenantDetailsLabelStyle}>Brand Logo</label>
                   <button
                     type="button"
                     style={{
@@ -337,16 +337,16 @@ export default function CreateTenant() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 12px' }}>
                 <div>
-                  <label style={customerDetailsLabelStyle}>ABN</label>
+                  <label style={tenantDetailsLabelStyle}>ABN</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.abn} onChange={(e) => updateField('abn', e.target.value)} placeholder="3456789012" />
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>ACN</label>
+                  <label style={tenantDetailsLabelStyle}>ACN</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.acn} onChange={(e) => updateField('acn', e.target.value)} placeholder="2345678901" />
                 </div>
 
                 <div style={{ gridColumn: '1 / span 2' }}>
-                  <label style={customerDetailsLabelStyle}>Document Upload (Any other Proof)</label>
+                  <label style={tenantDetailsLabelStyle}>Document Upload (Any other Proof)</label>
                   <button type="button" style={{ ...inputStyle, height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', cursor: 'pointer', backgroundColor: '#f8fbfd' }}>
                     <Upload size={11} color="var(--spacespot-cyan-primary)" /> Upload document
                   </button>
@@ -354,7 +354,7 @@ export default function CreateTenant() {
               </div>
 
               <div style={{ marginTop: '10px' }}>
-                <div style={{ ...customerDetailsLabelStyle, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ ...tenantDetailsLabelStyle, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={9} color="var(--spacespot-cyan-primary)" /> Verification
                 </div>
                 <button type="button" onClick={handleInitiateAllVerification} style={{ width: '100%', border: 'none', height: '26px', borderRadius: '4px', backgroundColor: 'var(--spacespot-navy-primary)', color: '#ffffff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
@@ -370,7 +370,7 @@ export default function CreateTenant() {
                   { label: 'T&C Acceptance', value: form.tcAcceptanceStatus, key: 'tcAcceptanceStatus' as const },
                 ].map((row) => (
                   <div key={row.label}>
-                    <div style={{ ...customerDetailsLabelStyle, marginBottom: '4px' }}>{row.label}</div>
+                    <div style={{ ...tenantDetailsLabelStyle, marginBottom: '4px' }}>{row.label}</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                       {['Initiate', 'Pending', 'Verified'].map((status) => {
                         const selected = row.value === status;
@@ -421,7 +421,7 @@ export default function CreateTenant() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 12px' }}>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Payment Method</label>
+                  <label style={tenantDetailsLabelStyle}>Payment Method</label>
                   <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.paymentMethod} onChange={(e) => updateField('paymentMethod', e.target.value)}>
                     <option>Select an option</option>
                     <option>Bank transfer</option>
@@ -430,7 +430,7 @@ export default function CreateTenant() {
                   </select>
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Payment Frequency</label>
+                  <label style={tenantDetailsLabelStyle}>Payment Frequency</label>
                   <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.paymentFrequency} onChange={(e) => updateField('paymentFrequency', e.target.value)}>
                     <option>Select an option</option>
                     <option>Monthly</option>
@@ -440,28 +440,28 @@ export default function CreateTenant() {
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Invoice Start Date</label>
+                  <label style={tenantDetailsLabelStyle}>Invoice Start Date</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.invoiceStartDate} onChange={(e) => updateField('invoiceStartDate', e.target.value)} placeholder="" />
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Security Deposit</label>
+                  <label style={tenantDetailsLabelStyle}>Security Deposit</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.securityDeposit} onChange={(e) => updateField('securityDeposit', e.target.value)} placeholder="$500" />
                 </div>
 
                 <div style={{ gridColumn: '1 / span 2' }}>
-                  <label style={customerDetailsLabelStyle}>Billing Address</label>
+                  <label style={tenantDetailsLabelStyle}>Billing Address</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.billingAddress} onChange={(e) => updateField('billingAddress', e.target.value)} placeholder="20 Bond Street Canberra ACT-1000" />
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>GST Eligible</label>
+                  <label style={tenantDetailsLabelStyle}>GST Eligible</label>
                   <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.gstEligible} onChange={(e) => updateField('gstEligible', e.target.value)}>
                     <option>No</option>
                     <option>Yes</option>
                   </select>
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Tax Authority Type</label>
+                  <label style={tenantDetailsLabelStyle}>Tax Authority Type</label>
                   <select style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.taxAuthorityType} onChange={(e) => updateField('taxAuthorityType', e.target.value)}>
                     <option>GST 10%</option>
                     <option>GST 0%</option>
@@ -469,12 +469,12 @@ export default function CreateTenant() {
                 </div>
 
                 <div>
-                  <label style={customerDetailsLabelStyle}>Lease Start Date</label>
+                  <label style={tenantDetailsLabelStyle}>Lease Start Date</label>
                   <input style={{ ...inputStyle, height: '30px', fontSize: '10px' }} value={form.leaseStartDate} onChange={(e) => updateField('leaseStartDate', e.target.value)} placeholder="" />
                   <div style={{ fontSize: '8px', color: '#9aa8b9', marginTop: '4px' }}>(7 days after the advance payment receipt)</div>
                 </div>
                 <div>
-                  <label style={customerDetailsLabelStyle}>Advance Payment</label>
+                  <label style={tenantDetailsLabelStyle}>Advance Payment</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                     {['Initiate', 'Received'].map((status) => {
                       const selected = form.advancePaymentStatus === status;
@@ -596,7 +596,7 @@ export default function CreateTenant() {
 
               <button
                 type="button"
-                onClick={handleCreateCustomer}
+                onClick={handleCreateTenant}
                 style={{
                   width: '100%',
                   border: 'none',
@@ -609,7 +609,7 @@ export default function CreateTenant() {
                   fontWeight: 600,
                 }}
               >
-                Create Customer
+                Create Tenant
               </button>
             </div>
 
@@ -619,7 +619,7 @@ export default function CreateTenant() {
                 <span style={{ fontSize: '8px', fontWeight: 600, color: 'var(--spacespot-navy-primary)' }}>Required Fields</span>
               </div>
               <div style={{ fontSize: '7px', color: '#8a99aa', lineHeight: 1.4 }}>
-                Brand Name, Owner Name, and Email are required to create a customer.
+                Brand Name, Owner Name, and Email are required to create a tenant.
               </div>
             </div>
           </aside>

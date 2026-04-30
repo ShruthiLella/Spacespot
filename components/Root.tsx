@@ -227,7 +227,7 @@ export default function Root() {
         <div style={{ position: 'relative', width: '50%', maxWidth: '620px', minWidth: '420px' }}>
           <input
             type="text"
-            placeholder="Search spaces, customers, leases..."
+            placeholder="Search spaces, tenants, leases..."
             style={{
               width: '100%',
               borderRadius: '12px',
@@ -945,7 +945,7 @@ export default function Root() {
                       { label: 'Space', Icon: Building2, route: '/create/space' },
                       { label: 'Unit', Icon: Box, route: '/create/units' },
                       { label: 'Lease', Icon: FileText, route: '/create/lease' },
-                      { label: 'Customer', Icon: User, route: '/create/customer' },
+                      { label: 'Tenant', Icon: User, route: '/create/tenant' },
                       { label: 'Documents', Icon: Clipboard, route: '/create/documents' },
                     ].map((menuItem) => {
                       const isActiveCreateItem = location.pathname === menuItem.route;
@@ -1018,7 +1018,7 @@ export default function Root() {
                       { label: 'Space', Icon: Building2, route: '/manage/spaces' },
                       { label: 'Unit', Icon: Box, route: '/manage/units' },
                       { label: 'Lease', Icon: FileText, route: '/manage/leases' },
-                      { label: 'Customer', Icon: User, route: '/manage/customers' },
+                      { label: 'Tenant', Icon: User, route: '/manage/tenants' },
                       { label: 'Pricing', Icon: DollarSign, route: '/manage/pricing' },
                       { label: 'Documents', Icon: Clipboard, route: '/manage/documents' },
                     ].map((menuItem) => (

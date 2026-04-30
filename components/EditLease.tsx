@@ -20,8 +20,8 @@ type LeaseNavState = {
     code: string;
     title: string;
     unit: string;
-    customer: string;
-    customerId: string;
+    tenant: string;
+    tenantId: string;
     contact: string;
     period: string;
     amount: string;
@@ -96,7 +96,7 @@ export default function EditLease() {
     () => ({
       leaseId: selectedLease?.code || leaseId,
       leaseForUnitId: selectedLease?.unit || 'BEACH-L1-U2',
-      leasedTo: selectedLease?.customer || 'ABC Phones',
+      leasedTo: selectedLease?.tenant || 'ABC Phones',
       leasePrice: selectedLease?.amount || '$1200 per day',
       leasePeriodCount: '3',
       leasePeriodUnit: 'Year',
@@ -209,8 +209,8 @@ export default function EditLease() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Leased To *</label>
-                  <input style={inputStyle} value={form.leasedTo} onChange={(e) => updateField('leasedTo', e.target.value)} />
+                  <label style={labelStyle}>Leased To (Tenant) *</label>
+                  <input style={inputStyle} value={form.leasedTo} onChange={(e) => updateField('leasedTo', e.target.value)} placeholder="Select tenant" />
                 </div>
                 <div>
                   <label style={labelStyle}>Lease Price</label>
@@ -393,7 +393,7 @@ export default function EditLease() {
 
                 <div style={{ backgroundColor: '#f3f5f8', borderRadius: '6px', padding: '8px' }}>
                   <div style={{ fontSize: '8px', color: 'var(--spacespot-navy-primary)', marginBottom: '5px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <Bell size={8} color="var(--spacespot-cyan-primary)" /> Manual Setup Email Reminder to Customer
+                    <Bell size={8} color="var(--spacespot-cyan-primary)" /> Manual Setup Email Reminder to Tenant
                   </div>
                   <div style={{ fontSize: '7px', color: 'var(--spacespot-gray-500)', lineHeight: 1.35 }}>A week before the payment date</div>
                 </div>
@@ -548,7 +548,7 @@ export default function EditLease() {
                 <span style={{ fontSize: '8px', fontWeight: 600, color: 'var(--spacespot-navy-primary)' }}>Required Fields</span>
               </div>
               <div style={{ fontSize: '7px', color: '#8a99aa', lineHeight: 1.45 }}>
-                Lease ID, Unit ID, lease dates, and customer details should be reviewed before saving.
+                Lease ID, Unit ID, lease dates, and tenant details should be reviewed before saving.
               </div>
             </div>
           </aside>
