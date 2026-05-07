@@ -5,6 +5,9 @@ import { HomeIcon, PlusIcon, FolderIcon, ChartIcon, SettingsIcon } from './icons
 import { Sparkles, HelpCircle, User, Building2, Box, FileText, DollarSign, Clipboard, ChevronLeft, ChevronRight, ChevronDown, Settings, Bell, LogOut, Search, Check, Moon, Sun } from 'lucide-react';
 
 const USER_PREFERENCES_STORAGE_KEY = 'spacespot-user-preferences';
+const USER_ROLE_STORAGE_KEY = 'spacespot-user-role';
+
+type UserRole = 'spaceContributor' | 'spaceManager';
 
 function getStoredPreferences() {
   if (typeof window === 'undefined') {
@@ -31,6 +34,10 @@ export default function Root() {
   const [isExpandedSidebar, setIsExpandedSidebar] = useState(false);
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const [userPopupView, setUserPopupView] = useState('profile'); // 'profile', 'notifications', or 'preferences'
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    const storedRole = window.localStorage.getItem(USER_ROLE_STORAGE_KEY);
+    return storedRole === 'spaceManager' ? 'spaceManager' : 'spaceContributor';
+  });
   const [preferences, setPreferences] = useState(() => {
     const storedPreferences = getStoredPreferences();
 
@@ -529,6 +536,69 @@ export default function Root() {
                           <ChevronRight size={18} color="var(--spacespot-gray-500)" aria-hidden={true} />
                         </div>
                       </button>
+
+                      {/* Switch to Space Manager */}
+                      <div
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          color: 'var(--spacespot-navy-primary)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Building2 size={18} color="var(--spacespot-gray-500)" aria-hidden={true} />
+                            <span style={{ fontSize: '14px', fontWeight: 600 }}>Role</span>
+                          </div>
+                          <div style={{ display: 'inline-flex', border: '1px solid var(--spacespot-border-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUserRole('spaceContributor');
+                                localStorage.setItem(USER_ROLE_STORAGE_KEY, 'spaceContributor');
+                                setIsUserPopupOpen(false);
+                                setUserPopupView('profile');
+                                window.location.href = '/manage/spaces';
+                              }}
+                              style={{
+                                border: 'none',
+                                backgroundColor: userRole === 'spaceContributor' ? 'var(--spacespot-cyan-primary)' : 'var(--spacespot-surface-primary)',
+                                color: userRole === 'spaceContributor' ? '#111827' : 'var(--spacespot-text-primary)',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '6px 10px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Space Contributor
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUserRole('spaceManager');
+                                localStorage.setItem(USER_ROLE_STORAGE_KEY, 'spaceManager');
+                                setIsUserPopupOpen(false);
+                                setUserPopupView('profile');
+                                window.location.href = '/manage/spaces?view=approvals';
+                              }}
+                              style={{
+                                border: 'none',
+                                borderLeft: '1px solid var(--spacespot-border-subtle)',
+                                backgroundColor: userRole === 'spaceManager' ? 'var(--spacespot-cyan-primary)' : 'var(--spacespot-surface-primary)',
+                                color: userRole === 'spaceManager' ? '#111827' : 'var(--spacespot-text-primary)',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '6px 10px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Space Manager
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                       
                       {/* Log Out */}
                       <button
@@ -827,7 +897,7 @@ export default function Root() {
             overflow: 'visible',
             position: 'sticky',
             top: 0,
-            height: 'calc(100vh - 100px)',
+            height: '100vh',
             alignSelf: 'flex-start',
           }}
         >

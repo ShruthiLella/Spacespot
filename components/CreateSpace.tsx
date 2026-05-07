@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import enAU from 'date-fns/locale/en-AU';
+import { enAU } from 'date-fns/locale/en-AU';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/spacespot-datepicker.css';
 import TradingHoursInput from './TradingHoursInput';
-// Helper to format date to dd/mm/yyyy
 function formatDateToDisplay(iso: string) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
@@ -17,16 +16,12 @@ function formatDateToISO(date: Date | null) {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
-// Parse dd/mm/yyyy or yyyy-mm-dd to Date
 function parseToDate(val: string): Date | null {
   if (!val) return null;
-  // dd/mm/yyyy
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
     const [d, m, y] = val.split('/');
     return new Date(Number(y), Number(m) - 1, Number(d));
   }
-  // yyyy-mm-dd
   if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
     const [y, m, d] = val.split('-');
     return new Date(Number(y), Number(m) - 1, Number(d));
@@ -42,10 +37,10 @@ function parseISOToDate(iso: string): Date | null {
 import AddFloor from './AddFloor';
 import {
   Building2, Calendar, Check, Clock, FileText, Globe, Info,
-  Layers, Mail, MapPin, Maximize2, Phone, Plus, Settings,
+  Layers, Mail, MapPin, Maximize2, Phone, Settings,
   Shield, Upload, Users, X, Image as ImageIcon,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 type SpaceFormState = {
@@ -57,11 +52,14 @@ type SpaceFormState = {
   tradingHours: string;
   managedByEmail: string;
   managedByPhone: string;
+  country: string;
   spaceAddress: string;
   activeFrom: string;
   activeTo: string;
   ownership: string;
   management: string;
+  abn: string;
+  acn: string;
   netLettableArea: string;
   longTermNLA: string;
   casualLettableArea: string;
@@ -70,9 +68,45 @@ type SpaceFormState = {
   addFloors: string;
   floorNamingPattern: string;
   minPLIValue: string;
+  termsUploaded: boolean;
+  tradingHoursObj?: any;
 };
 
-// â”€â”€ Shared styles â”€â”€
+type SavedSpaceDraft = {
+  id: string;
+  name: string;
+  location: string;
+  type: string;
+  floors: number;
+  units: number;
+  availableUnits: number;
+  occupancy: number;
+  status: 'Active';
+  approvalStatus: 'Draft';
+  floorBreakdown?: { floor: string; units: number }[];
+  savedAt: string;
+  form: SpaceFormState;
+  aboveCount: number;
+  undergroundCount: number;
+};
+
+type SubmittedSpaceRequest = {
+  id: string;
+  name: string;
+  location: string;
+  type: string;
+  floors: number;
+  units: number;
+  availableUnits: number;
+  occupancy: number;
+  status: 'Inactive';
+  approvalStatus: 'Pending Approval';
+  floorBreakdown?: { floor: string; units: number }[];
+  submittedAt: string;
+};
+
+const SPACE_DRAFTS_STORAGE_KEY = 'spacespot.spaceDrafts';
+const SUBMITTED_SPACES_STORAGE_KEY = 'spacespot.submittedSpaces';
 
 const CYAN = 'var(--spacespot-cyan-primary, #14D8CC)';
 const NAVY = '#1a2b3c';
@@ -80,47 +114,35 @@ const NAVY = '#1a2b3c';
 const sectionCardStyle: React.CSSProperties = {
   backgroundColor: '#fff', border: '1px solid #dbe5ee', borderRadius: '10px', padding: '20px',
 };
-
 const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #cfd7e2', borderRadius: '6px',
   padding: '9px 12px', fontSize: '13px', color: '#1f2937',
   backgroundColor: '#f9fbfc', outline: 'none', boxSizing: 'border-box',
 };
-
 const selectStyle: React.CSSProperties = {
   ...inputStyle, appearance: 'none', paddingRight: '30px', cursor: 'pointer',
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fafc4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
 };
-
 const requiredAsterisk = <span style={{ color: '#e11d48', marginLeft: 2 }}>*</span>;
 const labelStyle: React.CSSProperties = {
   fontSize: '12px', color: '#374151', fontWeight: 600,
   marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px',
 };
-
 const twoColStyle: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px',
 };
-
 const chipStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: '6px',
   padding: '6px 14px', backgroundColor: '#eaf6f5',
   border: '1px solid #b2e0dc', borderRadius: '20px',
   fontSize: '12px', fontWeight: 600, color: NAVY, cursor: 'pointer',
+  whiteSpace: 'nowrap' as const,
 };
-
-const iconBtnBase: React.CSSProperties = {
-  width: '40px', height: '38px', borderRadius: '8px',
-  border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer',
-};
-
 const sqMSuffix: React.CSSProperties = {
   position: 'absolute', right: '10px', top: '50%',
   transform: 'translateY(-50%)', fontSize: '11px', color: '#8fafc4', fontWeight: 500,
 };
-
-// â”€â”€ Helpers â”€â”€
 
 const fieldIcon = (Icon: React.ElementType) => <Icon size={13} color={CYAN} />;
 
@@ -140,13 +162,13 @@ const generateFloorNames = (count: number, pattern: string): string[] => {
   return names;
 };
 
-// â”€â”€ Component â”€â”€
-
 export default function CreateSpace() {
-  // Floor state for AddFloor
   const [aboveCount, setAboveCount] = useState(0);
   const [undergroundCount, setUndergroundCount] = useState(0);
+  const [draftId, setDraftId] = useState('');
+  const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState<SpaceFormState>({
     spaceName: '', category: 'Retail', spaceWebsite: '', spaceOwner: '', spaceOwnerEmail: '',
@@ -155,12 +177,13 @@ export default function CreateSpace() {
     spaceAddress: '', activeFrom: '', activeTo: '',
     ownership: '', management: '',
     abn: '', acn: '',
-    overallRentableArea: '', permanentRentableArea: '',
-    otherRentableArea: '', expectedFootTraffic: '',
+    netLettableArea: '', longTermNLA: '',
+    casualLettableArea: '', expectedFootTraffic: '',
     expectedRevenue: '', addFloors: '',
     floorNamingPattern: 'Level 1, Level 2, Level 3...',
     minPLIValue: '',
     termsUploaded: false,
+    tradingHoursObj: {},
   });
 
   const [precinctInput, setPrecinctInput] = useState('');
@@ -168,31 +191,235 @@ export default function CreateSpace() {
   const [floorNames, setFloorNames] = useState<string[]>([]);
   const [editingFloor, setEditingFloor] = useState<number | null>(null);
   const [editingFloorName, setEditingFloorName] = useState('');
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Document state
+  const [generatedDocs, setGeneratedDocs] = useState<Record<string, boolean>>({});
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const termsInputRef = useRef<HTMLInputElement | null>(null);
+
+  const getFieldErrorStyle = (fieldKey: keyof SpaceFormState): React.CSSProperties => (
+    errors[fieldKey]
+      ? {
+          borderColor: '#e11d48',
+          boxShadow: '0 0 0 3px rgba(225, 29, 72, 0.12)',
+          backgroundColor: '#fff7f9',
+        }
+      : {}
+  );
+
+  const focusFirstInvalidField = (nextErrors: { [key: string]: string }) => {
+    const firstInvalidKey = Object.keys(nextErrors)[0];
+    if (!firstInvalidKey) return;
+
+    const target = document.querySelector(`[data-field="${firstInvalidKey}"]`) as HTMLElement | null;
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const focusable = target.querySelector('input, select, button, textarea') as HTMLElement | null;
+    focusable?.focus();
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestedDraftId = params.get('draftId');
+    if (!requestedDraftId) return;
+
+    try {
+      const raw = localStorage.getItem(SPACE_DRAFTS_STORAGE_KEY);
+      if (!raw) return;
+
+      const drafts = JSON.parse(raw) as SavedSpaceDraft[];
+      const draft = drafts.find((d) => d.id === requestedDraftId);
+      if (!draft) return;
+
+      setDraftId(draft.id);
+      setForm(draft.form);
+      setAboveCount(draft.aboveCount || 0);
+      setUndergroundCount(draft.undergroundCount || 0);
+    } catch {
+      // Ignore malformed drafts storage and keep fresh form defaults.
+    }
+  }, [location.search]);
 
   const updateField = (key: keyof SpaceFormState, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const handleUploadClick = (docKey: string) => {
+    fileInputRefs.current[docKey]?.click();
+  };
+
+  const handleFileChange = (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadedDocs((prev) => ({ ...prev, [docKey]: file.name }));
+  };
+
+  const handleGenerateTemplate = (docKey: string, label: string) => {
+    setGeneratedDocs((prev) => ({ ...prev, [docKey]: true }));
+    const content = `${label} - SpaceSpot Template\n\nSpace Name:\nCategory:\nAddress:\nOwner:\nTerm:\nRent:\nSpecial Conditions:\n`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${docKey}-spacespot-template.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const uploadField = (label: string, docKey: string) => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center' }}>
+      <div>
+        <label style={labelStyle}>{label}</label>
+        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+          {uploadedDocs[docKey]
+            ? `Uploaded: ${uploadedDocs[docKey]}`
+            : generatedDocs[docKey]
+              ? 'Template generated'
+              : 'No document selected'}
+        </div>
+      </div>
+      <button type="button" style={chipStyle} onClick={() => handleUploadClick(docKey)}>
+        Upload Document
+      </button>
+      <button type="button" style={chipStyle} onClick={() => handleGenerateTemplate(docKey, label)}>
+        Generate SpaceSpot Template
+      </button>
+      <input
+        type="file"
+        style={{ display: 'none' }}
+        ref={(el) => { fileInputRefs.current[docKey] = el; }}
+        onChange={(e) => handleFileChange(docKey, e)}
+      />
+    </div>
+  );
+
   const handleSubmit = () => {
-    // Validate required fields
     const newErrors: { [key: string]: string } = {};
     if (!form.spaceName.trim()) newErrors.spaceName = 'Required';
     if (!form.category.trim()) newErrors.category = 'Required';
+
+    // Mandatory owner fields
+    if (!form.spaceOwner.trim()) newErrors.spaceOwner = 'Required';
+    if (!form.spaceOwnerEmail.trim()) {
+      newErrors.spaceOwnerEmail = 'Required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.spaceOwnerEmail.trim())) {
+      newErrors.spaceOwnerEmail = 'Enter a valid email';
+    }
+
     if (!form.managedByEmail.trim()) newErrors.managedByEmail = 'Required';
     if (!form.managedByPhone.trim()) newErrors.managedByPhone = 'Required';
     if (!form.country.trim()) newErrors.country = 'Required';
     if (!form.spaceAddress.trim()) newErrors.spaceAddress = 'Required';
     if (!form.activeFrom.trim()) newErrors.activeFrom = 'Required';
     if (!form.activeTo.trim()) newErrors.activeTo = 'Required';
-    if (!form.ownership.trim()) newErrors.ownership = 'Required';
+
     if (!form.abn.trim()) newErrors.abn = 'Required';
     if (!form.acn.trim()) newErrors.acn = 'Required';
     if (!form.minPLIValue.trim()) newErrors.minPLIValue = 'Required';
-    if (!form.termsUploaded) newErrors.termsUploaded = 'Required';
+    if (!form.termsUploaded) newErrors.termsUploaded = 'Please upload or generate T&Cs';
+
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-    toast.success('Space submitted for approval');
-    navigate('/manage/spaces');
+
+    if (Object.keys(newErrors).length > 0) {
+      focusFirstInvalidField(newErrors);
+      return;
+    }
+
+    const floorTotal = aboveCount + undergroundCount;
+    const submittedSpace: SubmittedSpaceRequest = {
+      id: `SP-${Date.now()}`,
+      name: form.spaceName.trim(),
+      location: form.spaceAddress.trim(),
+      type: form.category.trim() || 'Retail',
+      floors: floorTotal,
+      units: 0,
+      availableUnits: 0,
+      occupancy: 0,
+      status: 'Inactive',
+      approvalStatus: 'Pending Approval',
+      floorBreakdown: floorTotal > 0
+        ? generateFloorNames(floorTotal, form.floorNamingPattern).map((floor) => ({ floor, units: 0 }))
+        : undefined,
+      submittedAt: new Date().toISOString(),
+    };
+
+    try {
+      const rawSubmitted = localStorage.getItem(SUBMITTED_SPACES_STORAGE_KEY);
+      const existingSubmitted = rawSubmitted ? JSON.parse(rawSubmitted) as SubmittedSpaceRequest[] : [];
+      localStorage.setItem(SUBMITTED_SPACES_STORAGE_KEY, JSON.stringify([submittedSpace, ...existingSubmitted]));
+
+      if (draftId) {
+        const rawDrafts = localStorage.getItem(SPACE_DRAFTS_STORAGE_KEY);
+        const existingDrafts = rawDrafts ? JSON.parse(rawDrafts) as SavedSpaceDraft[] : [];
+        const remainingDrafts = existingDrafts.filter((draft) => draft.id !== draftId);
+        localStorage.setItem(SPACE_DRAFTS_STORAGE_KEY, JSON.stringify(remainingDrafts));
+      }
+    } catch {
+      toast.error('Unable to submit space for approval');
+      return;
+    }
+
+    setShowSubmitSuccess(true);
+  };
+
+  const handleSaveDraft = () => {
+    const generatedId = `DRF-${Date.now()}`;
+    const resolvedDraftId = draftId || generatedId;
+    const floorTotal = aboveCount + undergroundCount;
+    const draft: SavedSpaceDraft = {
+      id: resolvedDraftId,
+      name: form.spaceName.trim() || 'Untitled Draft Space',
+      location: form.spaceAddress.trim() || 'Not specified',
+      type: form.category.trim() || 'Retail',
+      floors: floorTotal,
+      units: 0,
+      availableUnits: 0,
+      occupancy: 0,
+      status: 'Active',
+      approvalStatus: 'Draft',
+      floorBreakdown: floorTotal > 0
+        ? generateFloorNames(floorTotal, form.floorNamingPattern).map((floor) => ({ floor, units: 0 }))
+        : undefined,
+      savedAt: new Date().toISOString(),
+      form,
+      aboveCount,
+      undergroundCount,
+    };
+
+    try {
+      const raw = localStorage.getItem(SPACE_DRAFTS_STORAGE_KEY);
+      const existing = raw ? JSON.parse(raw) as SavedSpaceDraft[] : [];
+      const next = existing.some((d) => d.id === resolvedDraftId)
+        ? existing.map((d) => (d.id === resolvedDraftId ? draft : d))
+        : [draft, ...existing];
+
+      localStorage.setItem(SPACE_DRAFTS_STORAGE_KEY, JSON.stringify(next));
+      setDraftId(resolvedDraftId);
+      toast.success('Draft saved');
+      setTimeout(() => navigate('/manage/spaces'), 250);
+    } catch {
+      toast.error('Unable to save draft');
+    }
+  };
+
+  const handleDeleteDraft = () => {
+    if (!draftId) {
+      toast.error('No draft found to delete');
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(SPACE_DRAFTS_STORAGE_KEY);
+      const existing = raw ? JSON.parse(raw) as SavedSpaceDraft[] : [];
+      const remaining = existing.filter((draft) => draft.id !== draftId);
+      localStorage.setItem(SPACE_DRAFTS_STORAGE_KEY, JSON.stringify(remaining));
+      toast.success('Draft deleted');
+      navigate('/manage/spaces');
+    } catch {
+      toast.error('Unable to delete draft');
+    }
   };
 
   const updateFloors = (count: number, pattern: string) => {
@@ -220,8 +447,6 @@ export default function CreateSpace() {
   const filledCount = Object.values(form).filter((v) => typeof v === 'string' && v.trim() !== '').length;
   const completionPct = Math.round((filledCount / Object.keys(form).length) * 100);
 
-  // â”€â”€ Reusable renderers â”€â”€
-
   const sectionHeader = (icon: React.ReactNode, title: string, subtitle?: string) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
       <div style={{
@@ -239,52 +464,21 @@ export default function CreateSpace() {
   );
 
   const textField = (label: string, Icon: React.ElementType, key: keyof SpaceFormState, placeholder: string, required?: boolean, extra?: Partial<React.InputHTMLAttributes<HTMLInputElement>>) => (
-    <div>
+    <div data-field={key}>
       <label style={labelStyle}>{fieldIcon(Icon)} {label} {required && requiredAsterisk}</label>
-      <input style={inputStyle} placeholder={placeholder} value={form[key]} onChange={(e) => updateField(key, e.target.value)} {...extra} />
+      <input style={{ ...inputStyle, ...getFieldErrorStyle(key) }} placeholder={placeholder} value={form[key] as string} onChange={(e) => updateField(key, e.target.value)} {...extra} />
       {errors[key] && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors[key]}</div>}
     </div>
   );
 
   const areaField = (label: string, key: keyof SpaceFormState, placeholder: string, required?: boolean) => (
-    <div>
+    <div data-field={key}>
       <label style={labelStyle}>{fieldIcon(Maximize2)} {label} {required && requiredAsterisk}</label>
       <div style={{ position: 'relative' }}>
-        <input style={{ ...inputStyle, paddingRight: '45px' }} placeholder={placeholder} value={form[key]} onChange={(e) => updateField(key, e.target.value)} />
+        <input style={{ ...inputStyle, paddingRight: '45px', ...getFieldErrorStyle(key) }} placeholder={placeholder} value={form[key] as string} onChange={(e) => updateField(key, e.target.value)} />
         <span style={sqMSuffix}>Sq M</span>
       </div>
       {errors[key] && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors[key]}</div>}
-    </div>
-  );
-
-  // Track generated docs for review
-  const [generatedDocs, setGeneratedDocs] = useState<{ [key: string]: boolean }>({});
-
-  const uploadField = (label: string, docKey: string) => (
-    <div style={{ display: 'grid', gridTemplateColumns: generatedDocs[docKey] ? '1fr auto auto' : '1fr auto', alignItems: 'end', gap: 12 }}>
-      <div style={{ width: '100%' }}>
-        <label style={labelStyle}>{fieldIcon(FileText)} {label}</label>
-        <div style={{ border: '1px solid #cfd7e2', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#f9fbfc', cursor: 'pointer' }}>
-          <Upload size={16} color="#8fafc4" />
-          <span style={{ fontSize: '12px', color: '#6b7e91', fontWeight: 500 }}>Upload Document</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        style={{ background: CYAN, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 600, fontSize: 12, cursor: 'pointer', height: 38, alignSelf: 'end' }}
-        onClick={() => setGeneratedDocs(prev => ({ ...prev, [docKey]: true }))}
-      >
-        Generate using Spacespot templates
-      </button>
-      {generatedDocs[docKey] && (
-        <button
-          type="button"
-          style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 600, fontSize: 12, cursor: 'pointer', height: 38, alignSelf: 'end' }}
-          onClick={() => alert('Reviewing ' + label)}
-        >
-          Review
-        </button>
-      )}
     </div>
   );
 
@@ -297,9 +491,52 @@ export default function CreateSpace() {
 
   return (
     <div style={{ backgroundColor: '#eef2f6', minHeight: '100vh', padding: '24px 0 32px' }}>
+      {showSubmitSuccess && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '24px',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 24px 60px rgba(15, 23, 42, 0.2)', padding: '28px', textAlign: 'center', border: '1px solid #c8f2ee' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#e6fffe', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
+              <Check size={26} color={CYAN} />
+            </div>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: NAVY, marginBottom: '8px' }}>Submitted Space for Approval</div>
+            <div style={{ fontSize: '13px', color: '#6b7e91', marginBottom: '22px' }}>Your space request has been submitted successfully.</div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubmitSuccess(false);
+                }}
+                style={{ border: '1px solid #d1d5db', backgroundColor: '#fff', color: NAVY, borderRadius: '10px', padding: '11px 20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', minWidth: '100px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubmitSuccess(false);
+                  navigate('/manage/spaces');
+                }}
+                style={{ border: 'none', backgroundColor: NAVY, color: '#fff', borderRadius: '10px', padding: '11px 20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', minWidth: '100px' }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ maxWidth: '1342px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: '32px', alignItems: 'start' }}>
 
-        {/* â”€â”€ Main Content â”€â”€ */}
+        {/* Main Content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: NAVY }}>Create New Space</h1>
@@ -310,15 +547,12 @@ export default function CreateSpace() {
           <div style={{ ...sectionCardStyle, padding: '24px' }}>
             {sectionHeader(<Info size={16} color="#fff" />, 'Basic Information', 'Primary space details and contact information')}
             <div style={{ display: 'grid', gap: '14px' }}>
-
               {textField('Space Name', Building2, 'spaceName', 'e.g., Beachside Canberra Mall', true)}
 
-
-
               <div style={twoColStyle}>
-                <div>
+                <div data-field="category">
                   <label style={labelStyle}>{fieldIcon(Layers)} Category {requiredAsterisk}</label>
-                  <select style={selectStyle} value={form.category} onChange={(e) => updateField('category', e.target.value)}>
+                  <select style={{ ...selectStyle, ...getFieldErrorStyle('category') }} value={form.category} onChange={(e) => updateField('category', e.target.value)}>
                     <option value="">Select Category</option>
                     <option value="Retail">Retail</option>
                     <option value="Commercial">Commercial</option>
@@ -328,34 +562,46 @@ export default function CreateSpace() {
                   {errors.category && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.category}</div>}
                 </div>
                 <div>
-                  <label style={labelStyle}>{fieldIcon(Globe)} Space Website<span style={{ fontWeight: 400, color: '#8a9ab0', fontSize: '11px' }}>(Optional)</span></label>
+                  <label style={labelStyle}>{fieldIcon(Globe)} Space Website <span style={{ fontWeight: 400, color: '#8a9ab0', fontSize: '11px' }}>(Optional)</span></label>
                   <input style={inputStyle} placeholder="www.beachsideactmall.com" value={form.spaceWebsite} onChange={(e) => updateField('spaceWebsite', e.target.value)} />
                 </div>
               </div>
 
               <div style={twoColStyle}>
-                <div>
-                  <label style={labelStyle}>{fieldIcon(Building2)} Space Registered to (Space Owner)</label>
-                  <input style={inputStyle} placeholder="CVQ Properties" value={form.spaceOwner} onChange={e => updateField('spaceOwner', e.target.value)} />
+                <div data-field="spaceOwner">
+                  <label style={labelStyle}>{fieldIcon(Building2)} Space Registered to (Space Owner) {requiredAsterisk}</label>
+                  <input
+                    style={{ ...inputStyle, ...getFieldErrorStyle('spaceOwner') }}
+                    placeholder="CVQ Properties"
+                    value={form.spaceOwner}
+                    onChange={e => updateField('spaceOwner', e.target.value)}
+                  />
+                  {errors.spaceOwner && (
+                    <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.spaceOwner}</div>
+                  )}
                 </div>
-                <div>
-                  <label style={labelStyle}>{fieldIcon(Mail)} Space Owner (Email)</label>
-                  <input style={inputStyle} placeholder="Chris.Hemsworth@cvq.com" value={form.spaceOwnerEmail} onChange={e => updateField('spaceOwnerEmail', e.target.value)} />
+                <div data-field="spaceOwnerEmail">
+                  <label style={labelStyle}>{fieldIcon(Mail)} Space Owner (Email) {requiredAsterisk}</label>
+                  <input
+                    style={{ ...inputStyle, ...getFieldErrorStyle('spaceOwnerEmail') }}
+                    placeholder="Chris.Hemsworth@cvq.com"
+                    value={form.spaceOwnerEmail}
+                    onChange={e => updateField('spaceOwnerEmail', e.target.value)}
+                  />
+                  {errors.spaceOwnerEmail && (
+                    <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.spaceOwnerEmail}</div>
+                  )}
                 </div>
               </div>
-
 
               <div style={twoColStyle}>
                 {textField('Managed By (Space Contributor)', Mail, 'managedByEmail', 'mallmanager@company.com', true)}
                 {textField('Phone number (Manager)', Phone, 'managedByPhone', '+61 411111111', true)}
               </div>
-              <div>
+
+              <div data-field="country">
                 <label style={labelStyle}>{fieldIcon(Globe)} Country {requiredAsterisk}</label>
-                <select
-                  style={selectStyle}
-                  value={form.country}
-                  onChange={e => updateField('country', e.target.value)}
-                >
+                <select style={{ ...selectStyle, ...getFieldErrorStyle('country') }} value={form.country} onChange={e => updateField('country', e.target.value)}>
                   <option value="">Select Country</option>
                   <option value="Australia">Australia</option>
                   <option value="United States">United States</option>
@@ -375,34 +621,22 @@ export default function CreateSpace() {
                 </select>
                 {errors.country && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.country}</div>}
               </div>
+
               {textField('Space Address', MapPin, 'spaceAddress', '10 Bond Street, Chelsea, Sydney 2000', true)}
-              <div>
+
+              <div data-field="tradingHours">
                 <label style={labelStyle}>{fieldIcon(Clock)} Trading Hours</label>
-                <TradingHoursInput
-                  value={form.tradingHoursObj}
-                  onChange={(obj, summary) => {
-                    setForm(prev => ({ ...prev, tradingHoursObj: obj, tradingHours: summary }));
-                  }}
-                />
+                <div style={{ borderRadius: '8px', ...getFieldErrorStyle('tradingHours') }}>
+                  <TradingHoursInput
+                    value={form.tradingHoursObj}
+                    onChange={(obj: any, summary: string) => {
+                      setForm(prev => ({ ...prev, tradingHoursObj: obj, tradingHours: summary }));
+                    }}
+                  />
+                </div>
                 {errors.tradingHours && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.tradingHours}</div>}
               </div>
 
-
-              {/* Space Logo */}
-              <div>
-                <label style={labelStyle}>{fieldIcon(ImageIcon)} Space Logo</label>
-                <div style={{ border: '1.5px dashed #b0bec8', borderRadius: '8px', padding: '24px 16px', display: 'grid', placeItems: 'center', backgroundColor: '#fafcfd', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#eafaf8', display: 'grid', placeItems: 'center' }}>
-                      <Upload size={18} color={CYAN} />
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#6b7e91', fontWeight: 500 }}>Click to upload logo</div>
-                    <div style={{ fontSize: '11px', color: '#aab4bf' }}>PNG, JPG up to 5MB</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Number of floors, Number of underground floors, Floors (AddFloor) moved here */}
               <AddFloor
                 aboveCount={aboveCount}
                 setAboveCount={setAboveCount}
@@ -417,99 +651,61 @@ export default function CreateSpace() {
             {sectionHeader(<Settings size={16} color="#fff" />, 'Operational Details')}
             <div style={{ display: 'grid', gap: '14px' }}>
               <div style={twoColStyle}>
-                <div>
+                <div data-field="activeFrom">
                   <label style={labelStyle}>{fieldIcon(Calendar)} Active From {requiredAsterisk}</label>
                   <DatePicker
                     locale={enAU}
                     selected={parseISOToDate(form.activeFrom)}
-                    onChange={date => updateField('activeFrom', formatDateToISO(date))}
+                    onChange={(date: Date | null) => updateField('activeFrom', formatDateToISO(date))}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/yyyy"
                     className="spacespot-datepicker"
                     wrapperClassName="spacespot-datepicker-wrapper"
                     popperClassName="spacespot-datepicker-popper"
-                    style={{ width: '100%' }}
-                    customInput={
-                      <input
-                        style={{
-                          ...inputStyle,
-                          padding: '7px 10px',
-                          fontSize: '13px',
-                          color: '#1f2937',
-                          backgroundColor: '#f9fbfc',
-                          border: '1px solid #cfd7e2',
-                          borderRadius: '6px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    }
+                    customInput={<input style={{ ...inputStyle, padding: '7px 10px', ...getFieldErrorStyle('activeFrom') }} />}
                     autoComplete="off"
-                    onChangeRaw={e => {
-                      const val = e.target.value;
+                    onChangeRaw={(e) => {
+                      if (!e) return;
+                      const val = (e.target as HTMLInputElement).value;
                       const parsed = parseToDate(val);
                       if (parsed) updateField('activeFrom', formatDateToISO(parsed));
                     }}
-                    dateFormatCalendar="eee"
                     formatWeekDay={name => name.replace(/[^A-Z]/g, '').slice(0, 2)}
                     renderCustomHeader={({ date, decreaseMonth, increaseMonth, prevMonthButtonDisabled, nextMonthButtonDisabled }) => (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 8px 8px' }}>
-                        <button type="button" className="react-datepicker__navigation" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} aria-label="Previous Month">
-                          <ChevronLeft className="spacespot-datepicker-nav-icon" />
-                        </button>
+                        <button type="button" className="react-datepicker__navigation" onClick={decreaseMonth} disabled={prevMonthButtonDisabled}><ChevronLeft className="spacespot-datepicker-nav-icon" /></button>
                         <span style={{ fontWeight: 700, fontSize: 16, color: '#1a2b3c' }}>{date.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                        <button type="button" className="react-datepicker__navigation" onClick={increaseMonth} disabled={nextMonthButtonDisabled} aria-label="Next Month">
-                          <ChevronRight className="spacespot-datepicker-nav-icon" />
-                        </button>
+                        <button type="button" className="react-datepicker__navigation" onClick={increaseMonth} disabled={nextMonthButtonDisabled}><ChevronRight className="spacespot-datepicker-nav-icon" /></button>
                       </div>
                     )}
                   />
                   {errors.activeFrom && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2 }}>{errors.activeFrom}</div>}
                 </div>
-                <div>
+                <div data-field="activeTo">
                   <label style={labelStyle}>{fieldIcon(Calendar)} Active To {requiredAsterisk}</label>
                   <DatePicker
                     locale={enAU}
                     selected={parseISOToDate(form.activeTo)}
-                    onChange={date => updateField('activeTo', formatDateToISO(date))}
+                    onChange={(date: Date | null) => updateField('activeTo', formatDateToISO(date))}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/yyyy"
                     className="spacespot-datepicker"
                     wrapperClassName="spacespot-datepicker-wrapper"
                     popperClassName="spacespot-datepicker-popper"
-                    style={{ width: '100%' }}
-                    customInput={
-                      <input
-                        style={{
-                          ...inputStyle,
-                          padding: '7px 10px',
-                          fontSize: '13px',
-                          color: '#1f2937',
-                          backgroundColor: '#f9fbfc',
-                          border: '1px solid #cfd7e2',
-                          borderRadius: '6px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    }
+                    customInput={<input style={{ ...inputStyle, padding: '7px 10px', ...getFieldErrorStyle('activeTo') }} />}
                     autoComplete="off"
-                    onChangeRaw={e => {
-                      const val = e.target.value;
+                    onChangeRaw={(e) => {
+                      if (!e) return;
+                      const val = (e.target as HTMLInputElement).value;
                       const parsed = parseToDate(val);
                       if (parsed) updateField('activeTo', formatDateToISO(parsed));
                     }}
-                    dateFormatCalendar="eee"
                     formatWeekDay={name => name.replace(/[^A-Z]/g, '').slice(0, 2)}
                     renderCustomHeader={({ date, decreaseMonth, increaseMonth, prevMonthButtonDisabled, nextMonthButtonDisabled }) => (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 8px 8px' }}>
-                        <button type="button" className="react-datepicker__navigation" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} aria-label="Previous Month">
-                          <ChevronLeft className="spacespot-datepicker-nav-icon" />
-                        </button>
+                        <button type="button" className="react-datepicker__navigation" onClick={decreaseMonth} disabled={prevMonthButtonDisabled}><ChevronLeft className="spacespot-datepicker-nav-icon" /></button>
                         <span style={{ fontWeight: 700, fontSize: 16, color: '#1a2b3c' }}>{date.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                        <button type="button" className="react-datepicker__navigation" onClick={increaseMonth} disabled={nextMonthButtonDisabled} aria-label="Next Month">
-                          <ChevronRight className="spacespot-datepicker-nav-icon" />
-                        </button>
+                        <button type="button" className="react-datepicker__navigation" onClick={increaseMonth} disabled={nextMonthButtonDisabled}><ChevronRight className="spacespot-datepicker-nav-icon" /></button>
                       </div>
                     )}
                   />
@@ -517,37 +713,23 @@ export default function CreateSpace() {
                 </div>
               </div>
 
-
-              {/* Removed Owner Representative (Space Owner) and Management fields as requested */}
-
               <div style={twoColStyle}>
                 {textField('ABN', Info, 'abn', 'e.g., 12 345 678 901', true)}
                 {textField('ACN', Info, 'acn', 'e.g., 123 456 789', true)}
               </div>
 
-
               <div style={twoColStyle}>
-                {areaField('Net Lettable area(NLA)', 'netLettableArea', 'e.g., 5000')}
+                {areaField('Net Lettable area (NLA)', 'netLettableArea', 'e.g., 5000')}
                 {areaField('Long-term NLA', 'longTermNLA', 'e.g., 3800')}
               </div>
 
               <div style={twoColStyle}>
-                {areaField('Casual Lettable Area(CLA)', 'casualLettableArea', 'e.g., 1200')}
+                {areaField('Casual Lettable Area (CLA)', 'casualLettableArea', 'e.g., 1200')}
                 {textField('Expected Foot Traffic (per month)', Users, 'expectedFootTraffic', 'e.g., 10000')}
               </div>
 
               {textField('Expected Revenue for the Space (per month)', FileText, 'expectedRevenue', 'e.g., 100000')}
-
               {textField('Min. Public Liability Insurance (AUD)', Shield, 'minPLIValue', '1000000', true)}
-
-
-
-
-              {/* AddFloor moved to Basic Information section above */}
-
-              {/* Remove Space Summary from here if present (was previously below AddFloor) */}
-
-              {/* Add Precincts field removed as requested */}
             </div>
           </div>
 
@@ -555,68 +737,84 @@ export default function CreateSpace() {
           <div style={{ ...sectionCardStyle, padding: '24px' }}>
             {sectionHeader(<Shield size={16} color="#fff" />, 'Lease Requirements')}
             <div style={{ display: 'grid', gap: '14px' }}>
-              {/* Upload Space T&Cs for tenants - mandatory */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'end', gap: 12 }}>
-                <div style={{ width: '100%' }}>
-                  <label style={labelStyle}>Upload Space T&Cs for tenants {requiredAsterisk}</label>
-                  <div style={{ border: '1px solid #cfd7e2', borderRadius: '6px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', backgroundColor: '#f9fbfc', cursor: 'pointer' }}>
-                    <Upload size={16} color="#8fafc4" />
-                    <span style={{ fontSize: '12px', color: '#6b7e91', fontWeight: 500 }}>Upload Document</span>
+
+              {/* Upload Space T&Cs - fixed */}
+              <div data-field="termsUploaded">
+                <label style={labelStyle}>Upload Space T&Cs for tenants {requiredAsterisk}</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center', borderRadius: '8px', padding: errors.termsUploaded ? '10px' : 0, ...getFieldErrorStyle('termsUploaded') }}>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    {uploadedDocs['termsAndConditions']
+                      ? `Uploaded: ${uploadedDocs['termsAndConditions']}`
+                      : generatedDocs['termsAndConditions']
+                        ? 'Template generated'
+                        : 'No document selected'}
                   </div>
+                  <button
+                    type="button"
+                    style={chipStyle}
+                    onClick={() => termsInputRef.current?.click()}
+                  >
+                    Upload Document
+                  </button>
+                  <button
+                    type="button"
+                    style={chipStyle}
+                    onClick={() => {
+                      handleGenerateTemplate('termsAndConditions', 'Space T&Cs for Tenants');
+                      setForm(prev => ({ ...prev, termsUploaded: true }));
+                    }}
+                  >
+                    Generate SpaceSpot Template
+                  </button>
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    ref={termsInputRef}
+                    onChange={(e) => {
+                      handleFileChange('termsAndConditions', e);
+                      setForm(prev => ({ ...prev, termsUploaded: true }));
+                    }}
+                  />
                 </div>
-                <button
-                  type="button"
-                  style={{ background: CYAN, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 600, fontSize: 12, cursor: 'pointer', height: 38, alignSelf: 'end' }}
-                  onClick={() => setForm(prev => ({ ...prev, termsUploaded: true }))}
-                >
-                  Generate using Spacespot templates
-                </button>
-                {errors.termsUploaded && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 2, gridColumn: '1 / span 2' }}>{errors.termsUploaded}</div>}
+                {errors.termsUploaded && <div style={{ color: '#e11d48', fontSize: '11px', marginTop: 4 }}>{errors.termsUploaded}</div>}
               </div>
+
               {uploadField('Upload Space Safety Guidelines for Tenants', 'safety')}
               {uploadField('Upload Additional Documents (If Any) for Tenants', 'additional')}
-
-              {/* Use SpaceSpot Templates Dropdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'end', gap: 12 }}>
-                <div style={{ width: '100%' }}>
-                  <label style={labelStyle}>Use SpaceSpot Templates</label>
-                  <select style={{ ...inputStyle, width: '100%' }}>
-                    <option value="">Select a template</option>
-                    <option value="template1">Lease Agreement Template</option>
-                    <option value="template2">Safety Guidelines Template</option>
-                    <option value="template3">General Terms Template</option>
-                  </select>
-                </div>
-                <button
-                  type="button"
-                  style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 600, fontSize: 12, cursor: 'pointer', height: 38, alignSelf: 'end' }}
-                  onClick={() => alert('Document saved to local')}
-                >
-                  Download
-                </button>
-              </div>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '4px' }}>
+            <button
+              type="button"
+              onClick={handleDeleteDraft}
+              disabled={!draftId}
+              style={{ border: 'none', backgroundColor: draftId ? '#dc2626' : '#f3b4b4', color: '#fff', borderRadius: '8px', padding: '10px 24px', fontSize: '13px', fontWeight: 600, cursor: draftId ? 'pointer' : 'not-allowed', marginRight: '10px' }}
+            >
+              Delete Draft
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              style={{ border: 'none', backgroundColor: NAVY, color: '#fff', borderRadius: '8px', padding: '10px 24px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginRight: '10px' }}
+            >
+              Save
+            </button>
             <button type="button" onClick={() => navigate('/manage/spaces')} style={{ border: 'none', backgroundColor: '#9ca3af', color: '#fff', borderRadius: '8px', padding: '10px 24px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
         </div>
 
-        {/* —— Right Sidebar —— */}
+        {/* Right Sidebar */}
         <aside style={{ position: 'sticky', top: '24px' }}>
           <div style={{ backgroundColor: '#fff', border: '1px solid #dbe5ee', borderRadius: '10px', padding: '24px', fontSize: '13px', boxShadow: '0 2px 8px rgba(20, 216, 204, 0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
               <Building2 size={20} color={CYAN} />
-              <span style={{ fontWeight: 700, fontSize: '16px', color: NAVY, letterSpacing: '0.01em' }}>Space Summary</span>
+              <span style={{ fontWeight: 700, fontSize: '16px', color: NAVY }}>Space Summary</span>
             </div>
 
-
-
-            {/* Image placeholder - match Unit Summary style */}
             <div style={{ width: '100%', aspectRatio: '16 / 10', backgroundColor: '#17283e', borderRadius: '8px', display: 'grid', placeItems: 'center', marginBottom: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                 <ImageIcon size={22} color="#4a6a85" />
@@ -624,8 +822,6 @@ export default function CreateSpace() {
               </div>
             </div>
 
-
-            {/* Name and category - match Unit Summary style */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'var(--spacespot-cyan-pale)', borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: CYAN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700, fontSize: '14px', color: '#fff' }}>
                 {form.spaceName ? form.spaceName.charAt(0).toUpperCase() : '?'}
@@ -636,141 +832,50 @@ export default function CreateSpace() {
               </div>
             </div>
 
-
-            {/* All fields summary, matching Unit summary card spacing and layout */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
-              {/* Space Website */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Globe size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Website:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.spaceWebsite || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Globe size={13} /><span style={{ fontWeight: 600 }}>Website:</span>
+                <span style={{ color: '#6b7e91' }}>{form.spaceWebsite || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Trading Hours - grouped summary */}
-              <div style={{ fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                  <Clock size={13} style={{ marginRight: 2 }} />
-                  <span style={{ fontWeight: 600 }}>Trading Hours:</span>
-                </div>
-                <div style={{ marginLeft: 22, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {form.tradingHoursObj
-                    ? (() => {
-                        const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-                        const to12 = t => {
-                          if (!t) return '';
-                          let [h, m] = t.split(':');
-                          h = parseInt(h, 10);
-                          const ampm = h >= 12 ? 'PM' : 'AM';
-                          h = h % 12 || 12;
-                          return `${h}.${m.padStart(2, '0')} ${ampm}`;
-                        };
-                        // Build array of {days: [..], str}
-                        let groups = [];
-                        let prev = null;
-                        let group = null;
-                        for (let i = 0; i < DAYS.length; i++) {
-                          const day = DAYS[i];
-                          const val = form.tradingHoursObj[day];
-                          let str;
-                          if (!val || !val.open || !val.close) {
-                            str = 'Closed';
-                          } else {
-                            str = `${to12(val.open)} - ${to12(val.close)}`;
-                          }
-                          if (!group) {
-                            group = { start: day, end: day, str };
-                          } else if (group.str === str) {
-                            group.end = day;
-                          } else {
-                            groups.push(group);
-                            group = { start: day, end: day, str };
-                          }
-                        }
-                        if (group) groups.push(group);
-                        return groups.map((g, idx) => (
-                          <div key={idx} style={{ color: g.str === 'Closed' ? '#b0bec5' : '#6b7e91', fontWeight: 500 }}>
-                            <span style={{ width: 70, display: 'inline-block', fontWeight: 600, color: '#374151' }}>
-                              {g.start === g.end ? g.start : `${g.start}-${g.end}`}:
-                            </span> {g.str}
-                          </div>
-                        ));
-                      })()
-                    : <span style={{ color: '#b0bec5' }}>N/A</span>}
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Mail size={13} /><span style={{ fontWeight: 600 }}>Managed By:</span>
+                <span style={{ color: '#6b7e91' }}>{form.managedByEmail || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Managed By (Space Contributor) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Mail size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Managed By:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.managedByEmail || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Phone size={13} /><span style={{ fontWeight: 600 }}>Manager Phone:</span>
+                <span style={{ color: '#6b7e91' }}>{form.managedByPhone || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Phone number (Manager) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Phone size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Manager Phone:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.managedByPhone || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Globe size={13} /><span style={{ fontWeight: 600 }}>Country:</span>
+                <span style={{ color: '#6b7e91' }}>{form.country || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Country */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Globe size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Country:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.country || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <MapPin size={13} /><span style={{ fontWeight: 600 }}>Address:</span>
+                <span style={{ color: '#6b7e91' }}>{form.spaceAddress || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Space Address */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <MapPin size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Address:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.spaceAddress || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Calendar size={13} /><span style={{ fontWeight: 600 }}>Active:</span>
+                <span style={{ color: '#6b7e91' }}>
+                  {form.activeFrom ? formatDateToDisplay(form.activeFrom) : <span style={{ color: '#b0bec5' }}>N/A</span>}
+                  {' - '}
+                  {form.activeTo ? formatDateToDisplay(form.activeTo) : <span style={{ color: '#b0bec5' }}>N/A</span>}
+                </span>
               </div>
-              {/* Active From/To */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Calendar size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Active:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.activeFrom ? formatDateToDisplay(form.activeFrom) : <span style={{ color: '#b0bec5' }}>N/A</span>} - {form.activeTo ? formatDateToDisplay(form.activeTo) : <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-              </div>
-              {/* Owner Representative (Space Owner) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Building2 size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Owner Rep:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.ownership || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-              </div>
-              {/* Management */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Users size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Management:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.management || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-              </div>
-              {/* ABN/ACN */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Info size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>ABN:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.abn || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Info size={13} /><span style={{ fontWeight: 600 }}>ABN:</span>
+                <span style={{ color: '#6b7e91' }}>{form.abn || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
                 <span style={{ fontWeight: 600, marginLeft: 10 }}>ACN:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.acn || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+                <span style={{ color: '#6b7e91' }}>{form.acn || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Net Lettable Area, Long-term NLA, Casual Lettable Area */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Maximize2 size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>NLA:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.netLettableArea || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-                <span style={{ fontWeight: 600, marginLeft: 10 }}>Long-term NLA:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.longTermNLA || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Maximize2 size={13} /><span style={{ fontWeight: 600 }}>NLA:</span>
+                <span style={{ color: '#6b7e91' }}>{form.netLettableArea || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
                 <span style={{ fontWeight: 600, marginLeft: 10 }}>CLA:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.casualLettableArea || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+                <span style={{ color: '#6b7e91' }}>{form.casualLettableArea || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
-              {/* Expected Foot Traffic, Expected Revenue */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Users size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Foot Traffic:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.expectedFootTraffic || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-                <FileText size={13} style={{ marginLeft: 10, marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Revenue:</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.expectedRevenue || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
-              </div>
-              {/* Min. Public Liability Insurance */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151', marginBottom: 0 }}>
-                <Shield size={13} style={{ marginRight: 2 }} />
-                <span style={{ fontWeight: 600 }}>Min. PLI (AUD):</span>
-                <span style={{ color: '#6b7e91', fontWeight: 500 }}>{form.minPLIValue || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '12px', color: '#374151' }}>
+                <Shield size={13} /><span style={{ fontWeight: 600 }}>Min. PLI (AUD):</span>
+                <span style={{ color: '#6b7e91' }}>{form.minPLIValue || <span style={{ color: '#b0bec5' }}>N/A</span>}</span>
               </div>
             </div>
 
@@ -780,7 +885,6 @@ export default function CreateSpace() {
               {sidebarRow(Phone, form.managedByPhone, 'No phone')}
             </div>
 
-            {/* Floor info summary */}
             <div style={{ marginBottom: '16px', background: '#f4f8fb', borderRadius: 8, border: '1px solid #9fe5df', padding: '12px 16px', color: NAVY, fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontWeight: 700 }}>Total Floors:</span>
               <span style={{ fontSize: '15px', color: CYAN, fontWeight: 700 }}>{aboveCount + undergroundCount}</span>
